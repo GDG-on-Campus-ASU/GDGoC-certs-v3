@@ -79,8 +79,9 @@ A secure, multi-tenant certificate generation platform built with Laravel 11, Po
 4. **Access the application**
    - URL: http://localhost:8000
    - Default admin credentials:
-     - Email: admin@gdgoc.dev
+     - Email: admin@example.com
      - Password: password
+   - **⚠️ Important**: [Change the default credentials](docs/CHANGING_SUPERADMIN_CREDENTIALS.md) after first login!
 
 ### Local Development (without Docker)
 
@@ -114,12 +115,12 @@ A secure, multi-tenant certificate generation platform built with Laravel 11, Po
 
 ## Default Superadmin Account
 
-- Email: admin@gdgoc.dev
+- Email: admin@example.com
 - Password: password
 - Role: superadmin
 - Status: active
 
-**Important**: Change the default password after first login!
+**⚠️ Important**: [Change these credentials immediately](docs/CHANGING_SUPERADMIN_CREDENTIALS.md) after first login, especially in production!
 
 ## Database Schema
 

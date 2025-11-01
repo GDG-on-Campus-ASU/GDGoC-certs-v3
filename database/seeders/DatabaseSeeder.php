@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         // Create superadmin user
         User::factory()->create([
             'name' => 'Super Admin',
-            'email' => 'admin@gdgoc.dev',
+            'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'role' => 'superadmin',
             'status' => 'active',
