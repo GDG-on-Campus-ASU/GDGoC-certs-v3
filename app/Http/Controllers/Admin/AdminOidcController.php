@@ -32,12 +32,9 @@ class AdminOidcController extends Controller
             'token_validation_endpoint_url' => ['nullable', 'url', 'max:255'],
             'end_session_endpoint_url' => ['nullable', 'url', 'max:255'],
             'identity_key' => ['nullable', 'string', 'max:255'],
-            'link_existing_users' => ['boolean'],
-            'create_new_users' => ['boolean'],
-            'redirect_on_expiry' => ['boolean'],
         ]);
 
-        // Convert checkboxes to booleans
+        // Handle checkbox boolean values
         $validated['link_existing_users'] = $request->has('link_existing_users');
         $validated['create_new_users'] = $request->has('create_new_users');
         $validated['redirect_on_expiry'] = $request->has('redirect_on_expiry');

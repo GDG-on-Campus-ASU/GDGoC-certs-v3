@@ -23,7 +23,7 @@ class LogFailedLogin
         LoginLog::create([
             'email' => isset($event->credentials['email'])
                 ? $event->credentials['email']
-                : 'missing email; keys: [' . implode(', ', array_diff(array_keys($event->credentials), ['password'])) . ']',
+                : 'missing email; keys: ['.implode(', ', array_diff(array_keys($event->credentials), ['password'])).']',
             'ip_address' => request()->ip(),
             'success' => false,
         ]);

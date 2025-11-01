@@ -31,7 +31,7 @@ class LoginLogTest extends TestCase
 
     public function test_failed_login_creates_log_entry(): void
     {
-        $user = User::factory()->create([
+        User::factory()->create([
             'email' => 'test@example.com',
             'password' => bcrypt('password'),
         ]);
