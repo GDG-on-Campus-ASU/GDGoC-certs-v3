@@ -36,7 +36,7 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
-                                                <img src="{{ $user->gravatarUrl(40) }}" alt="{{ $user->name }}" class="h-10 w-10 rounded-full mr-3">
+                                                <img src="{{ $user->gravatarUrl(40) }}" alt="Profile picture of {{ $user->name }}" class="h-10 w-10 rounded-full mr-3">
                                                 <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
                                             </div>
                                         </td>
