@@ -21,7 +21,9 @@ class LogFailedLogin
     public function handle(Failed $event): void
     {
         LoginLog::create([
-            'email' => $event->credentials['email'] ?? 'unknown',
+            'email' => isset($event->credentials['email'])
+                ? $event->credentials['email']
+                : 'missing email; keys: [' . implode(', ', array_diff(array_keys($event->credentials), ['password'])) . ']',
             'ip_address' => request()->ip(),
             'success' => false,
         ]);
