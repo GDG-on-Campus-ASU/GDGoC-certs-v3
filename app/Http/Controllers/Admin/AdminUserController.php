@@ -87,11 +87,11 @@ class AdminUserController extends Controller
         $user->name = $validated['name'];
         $user->org_name = $validated['org_name'];
         $user->status = $validated['status'];
-        $user->termination_reason = $validated['status'] === 'terminated' 
-            ? $validated['termination_reason'] 
+        $user->termination_reason = $validated['status'] === 'terminated'
+            ? $validated['termination_reason']
             : null;
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 

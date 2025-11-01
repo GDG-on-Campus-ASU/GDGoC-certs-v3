@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('ip_address', 45);
             $table->boolean('success')->default(true);
             $table->timestamps();
-            
+
             $table->index('created_at');
             $table->index('success');
         });

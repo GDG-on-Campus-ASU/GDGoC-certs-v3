@@ -13,8 +13,8 @@ class AdminOidcController extends Controller
      */
     public function edit()
     {
-        $settings = OidcSetting::first() ?? new OidcSetting();
-        
+        $settings = OidcSetting::first() ?? new OidcSetting;
+
         return view('admin.oidc.edit', compact('settings'));
     }
 

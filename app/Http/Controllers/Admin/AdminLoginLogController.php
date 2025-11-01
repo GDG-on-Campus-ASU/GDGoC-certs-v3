@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LoginLog;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AdminLoginLogController extends Controller
 {

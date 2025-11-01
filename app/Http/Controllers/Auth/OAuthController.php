@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
@@ -17,7 +16,7 @@ class OAuthController extends Controller
     {
         // TODO: Configure OIDC provider in a later step
         // return Socialite::driver('oidc')->redirect();
-        
+
         return redirect()->route('login')->with('error', 'OAuth provider not configured yet.');
     }
 
@@ -28,7 +27,7 @@ class OAuthController extends Controller
     {
         // TODO: Implement OIDC callback logic in a later step
         // $user = Socialite::driver('oidc')->user();
-        
+
         return redirect()->route('login')->with('error', 'OAuth provider not configured yet.');
     }
 }

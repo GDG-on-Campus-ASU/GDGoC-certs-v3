@@ -29,14 +29,14 @@ Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.
 // Admin Routes - Protected by auth and superadmin middleware
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    
+
     // User Management
     Route::resource('users', AdminUserController::class)->except(['show']);
-    
+
     // OIDC Settings
     Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
     Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
-    
+
     // Login Logs
     Route::get('/logs/logins', [AdminLoginLogController::class, 'index'])->name('logs.index');
     Route::get('/logs/feed', [AdminLoginLogController::class, 'feed'])->name('logs.feed');
