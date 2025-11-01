@@ -7,10 +7,12 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\CertificateTemplateController as AdminCertificateTemplateController;
 use App\Http\Controllers\Admin\EmailTemplateController as AdminEmailTemplateController;
 use App\Http\Controllers\Auth\OAuthController;
+use App\Http\Controllers\BulkCertificateController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SmtpProviderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +48,13 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
     // Certificates
     Route::get('/certificates/create', [CertificateController::class, 'create'])->name('certificates.create');
     Route::post('/certificates', [CertificateController::class, 'store'])->name('certificates.store');
+
+    // Bulk Certificates
+    Route::get('/certificates/bulk', [BulkCertificateController::class, 'create'])->name('certificates.bulk');
+    Route::post('/certificates/bulk', [BulkCertificateController::class, 'store'])->name('certificates.bulk.store');
+
+    // SMTP Providers
+    Route::resource('smtp', SmtpProviderController::class)->names('smtp');
 });
 
 // Admin Routes - Protected by auth and superadmin middleware

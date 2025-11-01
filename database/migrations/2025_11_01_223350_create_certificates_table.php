@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('unique_id')->unique()->index();
             $table->string('recipient_name');
+            $table->string('recipient_email')->nullable();
             $table->enum('state', ['attending', 'completing']);
             $table->enum('event_type', ['workshop', 'course']);
             $table->string('event_title');

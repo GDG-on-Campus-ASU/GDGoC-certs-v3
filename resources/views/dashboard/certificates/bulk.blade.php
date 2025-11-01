@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create Certificate') }}
+            {{ __('Bulk Certificate Upload') }}
         </h2>
     </x-slot>
 
@@ -13,9 +13,41 @@
                 </div>
             @endif
 
+            @if(session('errors') && count(session('errors')) > 0)
+                <div class="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                    <p class="font-bold">Some rows had errors:</p>
+                    <ul class="list-disc list-inside mt-2">
+                        @foreach(session('errors') as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold mb-4">CSV File Format</h3>
+                    <p class="text-sm text-gray-600 mb-2">Your CSV file must have the following columns (in any order):</p>
+                    <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+                        <li><strong>recipient_name</strong> - Name of the recipient (required)</li>
+                        <li><strong>recipient_email</strong> - Email address of the recipient (optional)</li>
+                        <li><strong>state</strong> - Either "attending" or "completing" (required)</li>
+                        <li><strong>event_type</strong> - Either "workshop" or "course" (required)</li>
+                        <li><strong>event_title</strong> - Title of the event (required)</li>
+                        <li><strong>issue_date</strong> - Date in YYYY-MM-DD format (required)</li>
+                    </ul>
+                    <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                        <p class="text-sm font-semibold mb-2">Example CSV:</p>
+                        <pre class="text-xs">recipient_name,recipient_email,state,event_type,event_title,issue_date
+John Doe,john@example.com,completing,workshop,Web Development 101,2025-01-15
+Jane Smith,jane@example.com,attending,course,Machine Learning,2025-02-20</pre>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form method="POST" action="{{ route('dashboard.certificates.store') }}">
+                    <form method="POST" action="{{ route('dashboard.certificates.bulk.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         <!-- Certificate Template -->
@@ -72,60 +104,17 @@
                             <x-input-error :messages="$errors->get('email_template_id')" class="mt-2" />
                         </div>
 
-                        <!-- Recipient Name -->
+                        <!-- CSV File -->
                         <div class="mb-4">
-                            <x-input-label for="recipient_name" :value="__('Recipient Name')" />
-                            <x-text-input id="recipient_name" class="block mt-1 w-full" type="text" name="recipient_name" :value="old('recipient_name')" required />
-                            <x-input-error :messages="$errors->get('recipient_name')" class="mt-2" />
-                        </div>
-
-                        <!-- Recipient Email -->
-                        <div class="mb-4">
-                            <x-input-label for="recipient_email" :value="__('Recipient Email (Optional)')" />
-                            <x-text-input id="recipient_email" class="block mt-1 w-full" type="email" name="recipient_email" :value="old('recipient_email')" />
-                            <x-input-error :messages="$errors->get('recipient_email')" class="mt-2" />
-                            <p class="text-sm text-gray-600 mt-1">Email address to send the certificate to</p>
-                        </div>
-
-                        <!-- State -->
-                        <div class="mb-4">
-                            <x-input-label for="state" :value="__('State')" />
-                            <select id="state" name="state" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                <option value="">Select state</option>
-                                <option value="attending" {{ old('state') === 'attending' ? 'selected' : '' }}>Attending</option>
-                                <option value="completing" {{ old('state') === 'completing' ? 'selected' : '' }}>Completing</option>
-                            </select>
-                            <x-input-error :messages="$errors->get('state')" class="mt-2" />
-                        </div>
-
-                        <!-- Event Type -->
-                        <div class="mb-4">
-                            <x-input-label for="event_type" :value="__('Event Type')" />
-                            <select id="event_type" name="event_type" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                <option value="">Select event type</option>
-                                <option value="workshop" {{ old('event_type') === 'workshop' ? 'selected' : '' }}>Workshop</option>
-                                <option value="course" {{ old('event_type') === 'course' ? 'selected' : '' }}>Course</option>
-                            </select>
-                            <x-input-error :messages="$errors->get('event_type')" class="mt-2" />
-                        </div>
-
-                        <!-- Event Title -->
-                        <div class="mb-4">
-                            <x-input-label for="event_title" :value="__('Event Title')" />
-                            <x-text-input id="event_title" class="block mt-1 w-full" type="text" name="event_title" :value="old('event_title')" required />
-                            <x-input-error :messages="$errors->get('event_title')" class="mt-2" />
-                        </div>
-
-                        <!-- Issue Date -->
-                        <div class="mb-4">
-                            <x-input-label for="issue_date" :value="__('Issue Date')" />
-                            <x-text-input id="issue_date" class="block mt-1 w-full" type="date" name="issue_date" :value="old('issue_date', date('Y-m-d'))" required />
-                            <x-input-error :messages="$errors->get('issue_date')" class="mt-2" />
+                            <x-input-label for="csv_file" :value="__('CSV File')" />
+                            <input id="csv_file" type="file" name="csv_file" accept=".csv,.txt" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required />
+                            <x-input-error :messages="$errors->get('csv_file')" class="mt-2" />
+                            <p class="text-sm text-gray-600 mt-1">Upload a CSV file (max 10MB)</p>
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
                             <x-primary-button>
-                                {{ __('Create Certificate') }}
+                                {{ __('Upload and Process') }}
                             </x-primary-button>
                         </div>
                     </form>

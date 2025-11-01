@@ -86,4 +86,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Certificate::class);
     }
+
+    /**
+     * Get the SMTP providers that belong to the user.
+     */
+    public function smtpProviders()
+    {
+        return $this->hasMany(SmtpProvider::class);
+    }
 }

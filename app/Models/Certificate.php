@@ -11,6 +11,7 @@ class Certificate extends Model
         'user_id',
         'unique_id',
         'recipient_name',
+        'recipient_email',
         'state',
         'event_type',
         'event_title',
