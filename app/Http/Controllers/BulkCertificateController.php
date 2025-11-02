@@ -93,7 +93,7 @@ class BulkCertificateController extends Controller
                 // Map row data
                 $rowData = [
                     'recipient_name' => $row[$headerMap['recipient_name']] ?? '',
-                    'recipient_email' => $row[$headerMap['recipient_email']] ?? null,
+                    'recipient_email' => isset($row[$headerMap['recipient_email']]) ? (trim($row[$headerMap['recipient_email']]) ?: null) : null,
                     'state' => $row[$headerMap['state']] ?? '',
                     'event_type' => $row[$headerMap['event_type']] ?? '',
                     'event_title' => $row[$headerMap['event_title']] ?? '',
