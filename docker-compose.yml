@@ -128,7 +128,7 @@ services:
       dockerfile: Dockerfile
     container_name: gdgoc-scheduler
     working_dir: /var/www/html
-    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
     restart: unless-stopped
     volumes:
       - .:/var/www/html
