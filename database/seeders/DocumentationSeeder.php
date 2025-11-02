@@ -51,7 +51,7 @@ The bulk upload feature allows you to generate multiple certificates at once by 
 
 ## Step 1: Download the CSV Template
 
-**[Download CSV Template](/templates/bulk-certificates-template.csv)**
+**[Download CSV Template]({{ asset('templates/bulk-certificates-template.csv') }})**
 
 Click the link above to download a ready-to-use CSV template with sample data.
 
