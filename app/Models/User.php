@@ -62,4 +62,36 @@ class User extends Authenticatable
 
         return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=mp";
     }
+
+    /**
+     * Get the certificate templates that belong to the user.
+     */
+    public function certificateTemplates()
+    {
+        return $this->hasMany(CertificateTemplate::class);
+    }
+
+    /**
+     * Get the email templates that belong to the user.
+     */
+    public function emailTemplates()
+    {
+        return $this->hasMany(EmailTemplate::class);
+    }
+
+    /**
+     * Get the certificates that belong to the user.
+     */
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /**
+     * Get the SMTP providers that belong to the user.
+     */
+    public function smtpProviders()
+    {
+        return $this->hasMany(SmtpProvider::class);
+    }
 }
