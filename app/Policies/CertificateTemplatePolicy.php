@@ -52,7 +52,7 @@ class CertificateTemplatePolicy
      */
     public function clone(User $user, CertificateTemplate $certificateTemplate): bool
     {
-        return true;
+        return $certificateTemplate->is_global || $user->id === $certificateTemplate->user_id;
     }
 
     /**
