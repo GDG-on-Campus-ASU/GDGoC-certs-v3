@@ -15,7 +15,7 @@ class DocumentationSeeder extends Seeder
         DocumentationPage::create([
             'title' => 'Getting Started',
             'slug' => 'getting-started',
-            'content' => "# Welcome to GDGoC Certificate Platform!
+            'content' => '# Welcome to GDGoC Certificate Platform!
 
 This guide will walk you through the basics of using the GDGoC Certificate Generation Platform.
 
@@ -38,14 +38,14 @@ The GDGoC Certificate Generation Platform allows you to easily create, manage, a
 3. Generate certificates for your event
 4. Distribute certificates to recipients
 
-For detailed information on each feature, please refer to the specific documentation pages in the left sidebar.",
+For detailed information on each feature, please refer to the specific documentation pages in the left sidebar.',
             'order' => 1,
         ]);
 
         DocumentationPage::create([
             'title' => 'Bulk Upload (CSV)',
             'slug' => 'bulk-upload',
-            'content' => "# How to use Bulk Upload
+            'content' => '# How to use Bulk Upload
 
 The bulk upload feature allows you to generate multiple certificates at once by uploading a CSV file.
 
@@ -91,7 +91,7 @@ After generation, you can:
 - Make sure all email addresses are valid
 - The event title will be used in the certificate
 - Certificates are generated immediately upon upload
-- You can track all certificates in the **Certificates** section",
+- You can track all certificates in the **Certificates** section',
             'order' => 2,
         ]);
 
@@ -138,7 +138,7 @@ You can clone existing templates to create variations:
         DocumentationPage::create([
             'title' => 'SMTP Configuration',
             'slug' => 'smtp-configuration',
-            'content' => "# SMTP Configuration
+            'content' => '# SMTP Configuration
 
 To send certificates via email, you need to configure an SMTP provider.
 
@@ -179,7 +179,7 @@ After saving:
 
 ## Security Note
 
-Your SMTP credentials are encrypted and stored securely.",
+Your SMTP credentials are encrypted and stored securely.',
             'order' => 4,
         ]);
     }
