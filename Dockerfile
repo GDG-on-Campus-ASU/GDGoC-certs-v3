@@ -10,8 +10,8 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     libzip-dev \
-    zip \
-    unzip \
+    icu-dev \
+    oniguruma-dev \
     git \
     curl \
     nodejs \
@@ -62,12 +62,14 @@ FROM php:8.3-fpm-alpine
 
 # Install runtime dependencies only
 RUN apk add --no-cache \
-    postgresql-dev \
-    mysql-dev \
+    postgresql-libs \
+    mysql-client \
     libpng \
     libjpeg-turbo \
     freetype \
     libzip \
+    icu-libs \
+    oniguruma \
     curl
 
 # Install PHP extensions

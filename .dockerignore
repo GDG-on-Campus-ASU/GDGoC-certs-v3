@@ -1,0 +1,60 @@
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Dependencies (will be installed in container)
+/node_modules
+/vendor
+
+# Build artifacts
+/public/hot
+/public/storage
+/public/build
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# Testing
+/coverage
+.phpunit.result.cache
+
+# Storage (should be mounted as volumes)
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/app/public/*
+
+# Documentation
+/docs
+*.md
+!README.md
+
+# CI/CD
+.github
+
+# Database
+*.sqlite
+*.sqlite-journal
+database/database.sqlite
+
+# Misc
+*.log
+npm-debug.log
+yarn-error.log
+.phpunit.cache
