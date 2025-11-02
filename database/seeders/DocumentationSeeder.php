@@ -80,18 +80,28 @@ You can edit the CSV file using:
 
 ### CSV File Format
 
-Your CSV file must include the following headers:
+Your CSV file must include the following headers in this exact order:
 
 ```
-recipient_name,recipient_email,event_title
+recipient_name,recipient_email,state,event_type,event_title,issue_date
 ```
+
+#### Column Descriptions
+
+- **recipient_name**: Full name of the certificate recipient (required)
+- **recipient_email**: Email address of the recipient (optional, leave blank if not sending via email)
+- **state**: Certificate state - must be either `attending` or `completing` (required)
+- **event_type**: Type of event - must be either `workshop` or `course` (required)
+- **event_title**: Name of the event or course (required)
+- **issue_date**: Date the certificate was issued in YYYY-MM-DD format (required)
 
 ### Example CSV Content
 
 ```
-John Doe,john@example.com,Web Development Workshop
-Jane Smith,jane@example.com,Web Development Workshop
-Alice Johnson,alice@example.com,Mobile App Development
+recipient_name,recipient_email,state,event_type,event_title,issue_date
+John Doe,john@example.com,completing,workshop,Web Development Workshop,2024-01-15
+Jane Smith,jane@example.com,attending,course,Mobile App Development Course,2024-01-20
+Alice Johnson,alice@example.com,completing,workshop,Python Programming,2024-01-25
 ```
 
 **Important:** Each row represents one certificate recipient.
@@ -113,7 +123,10 @@ After generation, you can:
 
 ## Important Notes
 
-- Make sure all email addresses are valid
+- Make sure all email addresses are valid (or leave blank if not sending via email)
+- **State** must be exactly `attending` or `completing` (case-sensitive)
+- **Event Type** must be exactly `workshop` or `course` (case-sensitive)
+- **Issue Date** must be in YYYY-MM-DD format (e.g., 2024-01-15)
 - The event title will be used in the certificate
 - Certificates are generated immediately upon upload
 - You can track all certificates in the **Certificates** section

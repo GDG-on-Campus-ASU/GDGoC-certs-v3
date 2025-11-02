@@ -1,3 +1,3 @@
-recipient_name,recipient_email,event_title
-John Doe,john.doe@example.com,Sample Event Name
-Jane Smith,jane.smith@example.com,Sample Event Name
+recipient_name,recipient_email,state,event_type,event_title,issue_date
+John Doe,john.doe@example.com,completing,workshop,Web Development Workshop,2024-01-15
+Jane Smith,jane.smith@example.com,attending,course,Mobile App Development Course,2024-01-20
