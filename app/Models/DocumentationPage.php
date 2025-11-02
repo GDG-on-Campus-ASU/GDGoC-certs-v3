@@ -8,7 +8,7 @@ class DocumentationPage extends Model
 {
     protected $fillable = ['title', 'slug', 'content', 'order'];
 
-    public function getRouteKeyName()
+    public function getRouteKeyName(): string
     {
         return 'slug';
     }
