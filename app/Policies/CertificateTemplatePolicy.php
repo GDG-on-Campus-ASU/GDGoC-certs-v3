@@ -60,6 +60,6 @@ class CertificateTemplatePolicy
      */
     public function reset(User $user, CertificateTemplate $certificateTemplate): bool
     {
-        return true;
+        return $user->id === $certificateTemplate->user_id;
     }
 }
