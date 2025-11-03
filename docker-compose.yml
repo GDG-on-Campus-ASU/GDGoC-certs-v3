@@ -4,9 +4,9 @@ services:
     image: postgres:16-alpine
     container_name: gdgoc-postgres
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-gdgoc_certs}
-      POSTGRES_USER: ${DB_USERNAME:-gdgoc_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: gdgoc_certs
+      POSTGRES_USER: gdgoc_user
+      POSTGRES_PASSWORD: secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -14,7 +14,7 @@ services:
     networks:
       - gdgoc-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-gdgoc_user} -d ${DB_DATABASE:-gdgoc_certs}"]
+      test: ["CMD-SHELL", "pg_isready -U gdgoc_user -d gdgoc_certs"]
       interval: 10s
       timeout: 5s
       retries: 5
