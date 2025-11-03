@@ -1,22 +1,23 @@
 # Multi-stage build for optimized production image
 # Stage 1: Build dependencies
-FROM php:8.3-fpm-alpine AS builder
+FROM php:8.3-fpm AS builder
 
 # Install system dependencies
-RUN apk add --no-cache \
-    postgresql-dev \
-    mysql-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    default-libmysqlclient-dev \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libzip-dev \
-    icu-dev \
-    oniguruma-dev \
+    libicu-dev \
+    libonig-dev \
     git \
     curl \
     nodejs \
     npm \
-    zlib-dev
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions including Redis, BCMath, PDO MySQL
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -31,10 +32,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     bcmath
 
 # Install Redis extension
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -59,27 +58,28 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
 # Install runtime dependencies only
-RUN apk add --no-cache \
-    postgresql-libs \
-    postgresql-dev \
-    mysql-client \
-    mysql-dev \
-    libpng \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    libpq-dev \
+    default-mysql-client \
+    default-libmysqlclient-dev \
+    libpng16-16 \
     libpng-dev \
-    libjpeg-turbo \
-    libjpeg-turbo-dev \
-    freetype \
-    freetype-dev \
-    libzip \
+    libjpeg62-turbo \
+    libjpeg-dev \
+    libfreetype6 \
+    libfreetype6-dev \
+    libzip4 \
     libzip-dev \
-    icu-libs \
-    oniguruma \
+    libicu72 \
+    libonig5 \
     curl \
-    zlib \
-    zlib-dev
+    zlib1g \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -94,10 +94,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     bcmath
 
 # Install Redis extension
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -106,8 +104,8 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 WORKDIR /var/www/html
 
 # Create non-root user for running the application
-RUN addgroup -g 1000 appuser && \
-    adduser -u 1000 -G appuser -s /bin/sh -D appuser
+RUN groupadd -g 1000 appuser && \
+    useradd -u 1000 -g appuser -s /bin/bash -m appuser
 
 # Copy application from builder
 COPY --from=builder --chown=appuser:appuser /var/www/html /var/www/html
