@@ -457,4 +457,4 @@ For issues or questions:
 
 ## License
 
-This project is open-sourced software licensed under the MIT license.
+This project is open source software licensed under the MIT license.
