@@ -50,7 +50,7 @@ COPY package.json package-lock.json ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Install Node dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy application files
 COPY . .
