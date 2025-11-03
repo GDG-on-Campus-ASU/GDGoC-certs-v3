@@ -66,9 +66,13 @@ RUN apk add --no-cache \
     postgresql-libs \
     mysql-client \
     libpng \
+    libpng-dev \
     libjpeg-turbo \
+    libjpeg-turbo-dev \
     freetype \
+    freetype-dev \
     libzip \
+    libzip-dev \
     icu-libs \
     oniguruma \
     curl \
