@@ -64,7 +64,9 @@ FROM php:8.3-fpm-alpine
 # Install runtime dependencies only
 RUN apk add --no-cache \
     postgresql-libs \
+    postgresql-dev \
     mysql-client \
+    mysql-dev \
     libpng \
     libpng-dev \
     libjpeg-turbo \
