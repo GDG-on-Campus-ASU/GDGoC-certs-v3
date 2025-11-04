@@ -36,7 +36,7 @@ The application consists of the following services:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/KirolosMFahem/GDGoC-certs-v3.git
+git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git
 cd GDGoC-certs-v3
 ```
 
@@ -129,7 +129,7 @@ mkdir -p /var/www/gdgoc-certs
 cd /var/www/gdgoc-certs
 
 # Clone the repository
-git clone https://github.com/KirolosMFahem/GDGoC-certs-v3.git .
+git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git .
 git checkout main
 ```
 
@@ -502,4 +502,4 @@ For issues or questions:
 
 ## License
 
-This project is open source software licensed under the MIT license.
+The GDGoC Certificate Generation Platform is open-source software licensed under the [AGPL license](https://opensource.org/licenses/AGPL).
