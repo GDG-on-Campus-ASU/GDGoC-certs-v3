@@ -280,6 +280,23 @@ docker compose exec php chown -R appuser:appuser storage bootstrap/cache
 docker compose exec php chmod -R 775 storage bootstrap/cache
 ```
 
+### Vendor directory cannot be created
+If you see errors like `/var/www/html/vendor does not exist and could not be created`, this is due to permission conflicts between the host mount and the container user. This has been fixed by using named volumes for `vendor` and `node_modules`. To resolve:
+
+```bash
+# Remove old vendor volume if it exists
+docker compose down -v
+
+# Rebuild and restart
+docker compose build --no-cache
+docker compose up -d
+```
+
+The `vendor` and `node_modules` directories are now stored in Docker named volumes, which:
+- Preserve dependencies built in the Docker image
+- Prevent permission conflicts with host-mounted files
+- Allow the non-root `appuser` to manage dependencies
+
 ### Queue jobs not processing
 ```bash
 docker compose logs queue-worker

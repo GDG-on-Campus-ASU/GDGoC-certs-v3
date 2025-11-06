@@ -422,6 +422,23 @@ docker compose exec php chown -R appuser:appuser storage bootstrap/cache
 docker compose exec php chmod -R 775 storage bootstrap/cache
 ```
 
+### Vendor Directory Issues
+
+If you encounter errors about `/var/www/html/vendor` not being accessible or unable to be created:
+
+```bash
+# The vendor directory uses a named Docker volume to prevent permission conflicts
+# If you need to reset it:
+docker compose down -v  # WARNING: This removes all volumes including database data
+docker compose build --no-cache
+docker compose up -d
+```
+
+The application uses Docker named volumes for `vendor` and `node_modules` to:
+- Preserve dependencies installed during the Docker build
+- Avoid permission conflicts between the host and container users
+- Enable the non-root `appuser` to manage PHP and Node.js dependencies
+
 ### Queue Jobs Not Processing
 
 Check queue worker status:
