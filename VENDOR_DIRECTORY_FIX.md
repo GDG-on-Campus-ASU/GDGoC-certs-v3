@@ -174,7 +174,7 @@ For existing deployments, follow these steps:
 
 ## References
 
-- [Docker Compose Volume Documentation](https://docs.docker.com/compose/compose-file/07-volumes/)
+- [Docker Compose Volume Documentation](https://docs.docker.com/compose/compose-file/volumes/)
 - [Docker Volume Best Practices](https://docs.docker.com/storage/volumes/)
 - [Laravel Docker Deployment](https://laravel.com/docs/deployment)
 
