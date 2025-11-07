@@ -439,6 +439,26 @@ The application uses Docker named volumes for `vendor` and `node_modules` to:
 - Avoid permission conflicts between the host and container users
 - Enable the non-root `appuser` to manage PHP and Node.js dependencies
 
+### Nginx Startup Issues
+
+If nginx fails to start with "host not found in upstream" errors:
+
+```bash
+# Check if PHP service is healthy
+docker compose ps php
+
+# Wait for all services to become healthy
+docker compose up -d --wait
+
+# View nginx logs
+docker compose logs nginx
+
+# Restart services in correct order
+docker compose restart php nginx
+```
+
+The nginx service now waits for PHP-FPM to be healthy before starting. This prevents DNS resolution errors when nginx tries to connect to the PHP upstream server.
+
 ### Queue Jobs Not Processing
 
 Check queue worker status:

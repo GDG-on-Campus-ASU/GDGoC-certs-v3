@@ -160,6 +160,31 @@ docker compose exec php ls -la /var/www/html/vendor
 docker volume inspect gdgoc-certs-v3_vendor
 ```
 
+### Nginx "Host Not Found" Error
+
+If you see nginx errors like:
+```
+nginx: [emerg] host not found in upstream "php" in /etc/nginx/conf.d/default.conf:13
+```
+
+This occurs when nginx starts before PHP-FPM is fully initialized on the Docker network. This has been fixed by:
+
+1. Adding a health check to the PHP service
+2. Configuring nginx to wait for PHP to be healthy before starting
+
+To verify:
+```bash
+# Check service health status
+docker compose ps
+
+# Wait for services to be healthy
+docker compose up -d --wait
+
+# Check logs if issues persist
+docker compose logs nginx
+docker compose logs php
+```
+
 ## Migration Guide
 
 For existing deployments, follow these steps:

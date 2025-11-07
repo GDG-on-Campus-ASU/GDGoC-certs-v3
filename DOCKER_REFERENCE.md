@@ -297,6 +297,25 @@ The `vendor` and `node_modules` directories are now stored in Docker named volum
 - Prevent permission conflicts with host-mounted files
 - Allow the non-root `appuser` to manage dependencies
 
+### Nginx "host not found" error
+If you see nginx errors like `host not found in upstream "php"`, this means nginx started before PHP-FPM was ready:
+
+```bash
+# Check service health status
+docker compose ps
+
+# Wait for all services to be healthy
+docker compose up -d --wait
+
+# Check PHP service logs
+docker compose logs php
+```
+
+The PHP service now has a health check that ensures it's fully initialized before nginx starts. If issues persist:
+1. Ensure the PHP container is running: `docker compose ps php`
+2. Check for errors in PHP logs: `docker compose logs php`
+3. Restart the services: `docker compose restart php nginx`
+
 ### Queue jobs not processing
 ```bash
 docker compose logs queue-worker
