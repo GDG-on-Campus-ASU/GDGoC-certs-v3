@@ -185,6 +185,30 @@ docker compose logs nginx
 docker compose logs php
 ```
 
+### Storage and Bootstrap/Cache Permission Errors
+
+If you see Laravel migration errors like:
+```
+The stream or file "/var/www/html/storage/logs/laravel.log" could not be opened in append mode: Failed to open stream: Permission denied
+The /var/www/html/bootstrap/cache directory must be present and writable
+```
+
+This has been fixed by:
+
+1. **Removing redundant storage mounts** - The explicit `./storage:/var/www/html/storage` mounts were causing permission conflicts
+2. **Automatic permission fixes** - The entrypoint script now ensures directories exist with correct permissions (775) on every container start
+3. **Explicit permissions in Dockerfile** - Storage and bootstrap/cache are explicitly set to 775
+
+The fix is automatic - simply restart the containers:
+```bash
+docker compose restart php queue-worker scheduler
+```
+
+If issues persist, check the entrypoint logs:
+```bash
+docker compose logs php | grep -i permission
+```
+
 ## Migration Guide
 
 For existing deployments, follow these steps:
@@ -205,4 +229,10 @@ For existing deployments, follow these steps:
 
 ## Summary
 
-This fix resolves the vendor directory permission issue by using Docker named volumes to preserve built dependencies and maintain proper ownership. The solution is minimal, follows Docker best practices, and improves both security and performance.
+This comprehensive fix resolves multiple Docker deployment issues:
+
+1. **Vendor Directory Permissions** - Uses Docker named volumes to preserve built dependencies and maintain proper ownership
+2. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
+3. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
+
+The solution is minimal, follows Docker best practices, and improves both security and performance. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
