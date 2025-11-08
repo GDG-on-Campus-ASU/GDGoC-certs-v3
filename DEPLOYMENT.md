@@ -416,23 +416,34 @@ docker compose logs [service-name]
 
 ### Permission Issues
 
-Storage and bootstrap/cache permissions are automatically managed by the Docker entrypoint script. On each container start, the script ensures these directories exist with proper permissions (775).
+Storage and bootstrap/cache permissions are automatically managed by the Docker entrypoint script. On each container start, the script ensures these directories exist with proper permissions (777 for maximum CI compatibility).
 
-If Laravel migrations fail with "Permission denied" or "directory must be present and writable" errors, the entrypoint script should resolve them automatically on the next restart:
+If Laravel migrations fail with "Permission denied" or "directory must be present and writable" errors:
 
+**For local development:**
 ```bash
 docker compose restart php
 ```
 
-If issues persist, manually fix permissions:
+**For CI/CD environments:**
+The docker-test.yml workflow includes an explicit permission-fixing step before migrations:
+```yaml
+- name: Set Laravel directory permissions
+  run: |
+    docker compose exec -T php mkdir -p storage/logs bootstrap/cache
+    docker compose exec -T php chmod -R 777 storage bootstrap/cache
+```
+
+If you need to manually fix permissions:
 ```bash
-docker compose exec php chmod -R 775 storage bootstrap/cache
+docker compose exec php chmod -R 777 storage bootstrap/cache
 ```
 
 **Changes made:**
 - Removed redundant `./storage:/var/www/html/storage` mounts that caused permission conflicts
-- Added automatic permission fixes in the entrypoint script
-- Set explicit 775 permissions in the Dockerfile for these directories
+- Added automatic permission fixes (777) in the entrypoint script for CI compatibility
+- Added explicit permission-fixing step in CI workflows before migrations
+- Set explicit permissions in the Dockerfile for these directories
 
 ### Vendor Directory Issues
 

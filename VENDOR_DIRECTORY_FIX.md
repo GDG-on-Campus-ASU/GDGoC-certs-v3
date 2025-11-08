@@ -196,17 +196,33 @@ The /var/www/html/bootstrap/cache directory must be present and writable
 This has been fixed by:
 
 1. **Removing redundant storage mounts** - The explicit `./storage:/var/www/html/storage` mounts were causing permission conflicts
-2. **Automatic permission fixes** - The entrypoint script now ensures directories exist with correct permissions (775) on every container start
-3. **Explicit permissions in Dockerfile** - Storage and bootstrap/cache are explicitly set to 775
+2. **Automatic permission fixes** - The entrypoint script now ensures directories exist with 777 permissions for maximum CI compatibility
+3. **Explicit permissions in Dockerfile** - Storage and bootstrap/cache are explicitly set with proper permissions
+4. **CI workflow integration** - Added explicit permission-fixing step in docker-test.yml before migrations
 
-The fix is automatic - simply restart the containers:
+**For local development:**
+Simply restart the containers - the entrypoint script handles permissions automatically:
 ```bash
 docker compose restart php queue-worker scheduler
+```
+
+**For CI/CD environments:**
+The docker-test.yml workflow now includes an explicit step before migrations:
+```yaml
+- name: Set Laravel directory permissions
+  run: |
+    docker compose exec -T php mkdir -p storage/logs bootstrap/cache
+    docker compose exec -T php chmod -R 777 storage bootstrap/cache
 ```
 
 If issues persist, check the entrypoint logs:
 ```bash
 docker compose logs php | grep -i permission
+```
+
+Or manually fix permissions:
+```bash
+docker compose exec -T php chmod -R 777 storage bootstrap/cache
 ```
 
 ## Migration Guide

@@ -276,14 +276,25 @@ docker compose restart <service-name>
 
 ### Permission issues
 
-Storage and bootstrap/cache permission errors are now automatically fixed on container startup. The entrypoint script ensures these directories exist with correct permissions (775).
+Storage and bootstrap/cache permission errors are automatically fixed on container startup. The entrypoint script ensures these directories exist with 777 permissions for maximum compatibility across development and CI environments.
 
-If you still encounter permission errors:
+If you encounter permission errors in CI/CD:
 ```bash
-docker compose exec php chmod -R 775 storage bootstrap/cache
+# Add this step before migrations in your workflow
+docker compose exec -T php mkdir -p storage/logs bootstrap/cache
+docker compose exec -T php chmod -R 777 storage bootstrap/cache
 ```
 
-**Note:** The redundant `./storage` mount has been removed from docker-compose.yml. The storage directory is now managed through the main `.:/var/www/html` mount with automatic permission fixes applied on startup.
+For local development:
+```bash
+docker compose exec php chmod -R 777 storage bootstrap/cache
+```
+
+**Note:** 
+- The redundant `./storage` mount has been removed from docker-compose.yml
+- Storage directory is managed through the main `.:/var/www/html` mount
+- Automatic permission fixes (777) applied on startup for CI compatibility
+- CI workflows include explicit permission-fixing steps before migrations
 
 ### Vendor directory cannot be created
 If you see errors like `/var/www/html/vendor does not exist and could not be created`, this is due to permission conflicts between the host mount and the container user. This has been fixed by using named volumes for `vendor` and `node_modules`. To resolve:
