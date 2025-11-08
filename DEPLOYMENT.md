@@ -426,16 +426,23 @@ docker compose restart php
 ```
 
 **For CI/CD environments:**
-The docker-test.yml workflow includes an explicit permission-fixing step before migrations:
+The docker-test.yml workflow sets permissions on the host BEFORE mounting directories to avoid "Operation not permitted" errors:
 ```yaml
 - name: Set Laravel directory permissions
   run: |
-    docker compose exec -T php mkdir -p storage/logs bootstrap/cache
-    docker compose exec -T php chmod -R 777 storage bootstrap/cache
+    # Create directories on host with proper permissions before they're mounted
+    mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+    chmod -R 777 storage bootstrap/cache
 ```
 
-If you need to manually fix permissions:
+**Why on the host?** The container runs as non-root user `appuser`, so it cannot change permissions of host-mounted directories. Setting permissions on the host before mounting prevents "Operation not permitted" errors.
+
+If you need to manually fix permissions in local development:
 ```bash
+# On host (recommended for CI)
+chmod -R 777 storage bootstrap/cache
+
+# Or inside container (works for non-mounted dirs only)
 docker compose exec php chmod -R 777 storage bootstrap/cache
 ```
 

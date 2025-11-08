@@ -207,22 +207,29 @@ docker compose restart php queue-worker scheduler
 ```
 
 **For CI/CD environments:**
-The docker-test.yml workflow now includes an explicit step before migrations:
+The docker-test.yml workflow sets permissions on the HOST before mounting to avoid "Operation not permitted" errors:
 ```yaml
 - name: Set Laravel directory permissions
   run: |
-    docker compose exec -T php mkdir -p storage/logs bootstrap/cache
-    docker compose exec -T php chmod -R 777 storage bootstrap/cache
+    # Create directories on host with proper permissions before they're mounted
+    mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+    chmod -R 777 storage bootstrap/cache
 ```
+
+**Why this approach?**
+- The container runs as non-root user `appuser` (UID 1000)
+- Host-mounted directories are owned by the CI runner user
+- `appuser` cannot chmod host-owned files (results in "Operation not permitted")
+- Setting permissions on the host BEFORE mounting solves this issue
 
 If issues persist, check the entrypoint logs:
 ```bash
 docker compose logs php | grep -i permission
 ```
 
-Or manually fix permissions:
+Or manually fix permissions on the host:
 ```bash
-docker compose exec -T php chmod -R 777 storage bootstrap/cache
+chmod -R 777 storage bootstrap/cache
 ```
 
 ## Migration Guide
