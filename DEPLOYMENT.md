@@ -416,11 +416,78 @@ docker compose logs [service-name]
 
 ### Permission Issues
 
-Fix storage permissions:
+Storage and bootstrap/cache permissions are automatically managed by the Docker entrypoint script. On each container start, the script ensures these directories exist with proper permissions (777 for maximum CI compatibility).
+
+If Laravel migrations fail with "Permission denied" or "directory must be present and writable" errors:
+
+**For local development:**
 ```bash
-docker compose exec php chown -R appuser:appuser storage bootstrap/cache
-docker compose exec php chmod -R 775 storage bootstrap/cache
+docker compose restart php
 ```
+
+**For CI/CD environments:**
+The docker-test.yml workflow sets permissions on the host BEFORE mounting directories to avoid "Operation not permitted" errors:
+```yaml
+- name: Set Laravel directory permissions
+  run: |
+    # Create directories on host with proper permissions before they're mounted
+    mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+    chmod -R 777 storage bootstrap/cache
+```
+
+**Why on the host?** The container runs as non-root user `appuser`, so it cannot change permissions of host-mounted directories. Setting permissions on the host before mounting prevents "Operation not permitted" errors.
+
+If you need to manually fix permissions in local development:
+```bash
+# On host (recommended for CI)
+chmod -R 777 storage bootstrap/cache
+
+# Or inside container (works for non-mounted dirs only)
+docker compose exec php chmod -R 777 storage bootstrap/cache
+```
+
+**Changes made:**
+- Removed redundant `./storage:/var/www/html/storage` mounts that caused permission conflicts
+- Added automatic permission fixes (777) in the entrypoint script for CI compatibility
+- Added explicit permission-fixing step in CI workflows before migrations
+- Set explicit permissions in the Dockerfile for these directories
+
+### Vendor Directory Issues
+
+If you encounter errors about `/var/www/html/vendor` not being accessible or unable to be created:
+
+```bash
+# The vendor directory uses a named Docker volume to prevent permission conflicts
+# If you need to reset it:
+docker compose down -v  # WARNING: This removes all volumes including database data
+docker compose build --no-cache
+docker compose up -d
+```
+
+The application uses Docker named volumes for `vendor` and `node_modules` to:
+- Preserve dependencies installed during the Docker build
+- Avoid permission conflicts between the host and container users
+- Enable the non-root `appuser` to manage PHP and Node.js dependencies
+
+### Nginx Startup Issues
+
+If nginx fails to start with "host not found in upstream" errors:
+
+```bash
+# Check if PHP service is healthy
+docker compose ps php
+
+# Wait for all services to become healthy
+docker compose up -d --wait
+
+# View nginx logs
+docker compose logs nginx
+
+# Restart services in correct order
+docker compose restart php nginx
+```
+
+The nginx service now waits for PHP-FPM to be healthy before starting. This prevents DNS resolution errors when nginx tries to connect to the PHP upstream server.
 
 ### Queue Jobs Not Processing
 
