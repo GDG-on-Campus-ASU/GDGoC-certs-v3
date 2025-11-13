@@ -144,6 +144,14 @@ jobs:
           done
           echo "Redis is ready"
 
+      - name: Set Laravel directory permissions
+        run: |
+          echo "Setting permissions for Laravel storage and cache directories..."
+          # Create directories on host with proper permissions before they're mounted
+          mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+          chmod -R 777 storage bootstrap/cache
+          echo "Permissions set successfully"
+
       - name: Run database migrations (with retries)
         run: |
           echo "Running database migrations..."

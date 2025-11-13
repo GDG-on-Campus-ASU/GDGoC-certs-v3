@@ -275,10 +275,67 @@ docker compose restart <service-name>
 ```
 
 ### Permission issues
+
+Storage and bootstrap/cache permission errors are automatically fixed on container startup. The entrypoint script ensures these directories exist with 777 permissions for maximum compatibility across development and CI environments.
+
+If you encounter permission errors in CI/CD:
 ```bash
-docker compose exec php chown -R appuser:appuser storage bootstrap/cache
-docker compose exec php chmod -R 775 storage bootstrap/cache
+# Set permissions on HOST before starting Docker (recommended)
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+chmod -R 777 storage bootstrap/cache
 ```
+
+For local development:
+```bash
+# On host (recommended)
+chmod -R 777 storage bootstrap/cache
+
+# Or inside container (may fail on mounted directories)
+docker compose exec php chmod -R 777 storage bootstrap/cache
+```
+
+**Important Notes:** 
+- The redundant `./storage` mount has been removed from docker-compose.yml
+- Storage directory is managed through the main `.:/var/www/html` mount
+- Container runs as non-root `appuser`, so it cannot chmod host-mounted directories
+- **CI workflows set permissions on the HOST before mounting** to avoid "Operation not permitted" errors
+- Automatic permission fixes (777) in entrypoint work for directories created inside the container
+
+### Vendor directory cannot be created
+If you see errors like `/var/www/html/vendor does not exist and could not be created`, this is due to permission conflicts between the host mount and the container user. This has been fixed by using named volumes for `vendor` and `node_modules`. To resolve:
+
+```bash
+# Remove old vendor volume if it exists
+docker compose down -v
+
+# Rebuild and restart
+docker compose build --no-cache
+docker compose up -d
+```
+
+The `vendor` and `node_modules` directories are now stored in Docker named volumes, which:
+- Preserve dependencies built in the Docker image
+- Prevent permission conflicts with host-mounted files
+- Allow the non-root `appuser` to manage dependencies
+
+### Nginx "host not found" error
+If you see nginx errors like `host not found in upstream "php"`, this means nginx started before PHP-FPM was ready:
+
+```bash
+# Check service health status
+docker compose ps
+
+# Wait for all services to be healthy
+docker compose up -d --wait
+
+# Check PHP service logs
+docker compose logs php
+```
+
+The PHP service now has a health check that ensures it's fully initialized before nginx starts. If issues persist:
+1. Ensure the PHP container is running: `docker compose ps php`
+2. Check for errors in PHP logs: `docker compose logs php`
+3. Restart the services: `docker compose restart php nginx`
 
 ### Queue jobs not processing
 ```bash
