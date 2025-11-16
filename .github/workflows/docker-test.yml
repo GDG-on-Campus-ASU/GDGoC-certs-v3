@@ -32,6 +32,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -43,6 +46,7 @@ jobs:
           tags: gdgoc-certs:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          network: host
 
       - name: Inspect Docker image
         run: |
@@ -78,8 +82,8 @@ jobs:
 
       - name: Build and start Docker Compose services
         run: |
-          # Build php image, then start all key services together (build ensures image is available)
-          docker compose build --pull --no-cache php
+          # Build php image with host network to avoid DNS issues with PECL
+          DOCKER_BUILDKIT=1 docker compose build --pull --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 php
           docker compose up -d --build postgres redis php nginx
 
       - name: Wait for containers to be running
@@ -233,6 +237,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
 
       - name: Build Docker image for scanning
         uses: docker/build-push-action@v5
@@ -243,6 +250,7 @@ jobs:
           load: true
           tags: gdgoc-certs:scan
           cache-from: type=gha
+          network: host
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.24.0

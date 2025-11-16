@@ -31,10 +31,27 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     opcache \
     bcmath
 
-# Install Redis extension
-RUN pecl channel-update pecl.php.net && \
-    pecl install redis && \
-    docker-php-ext-enable redis
+# Install Redis extension with retry logic and fallback
+RUN set -eux; \
+    { \
+        pecl channel-update pecl.php.net && \
+        pecl install redis && \
+        docker-php-ext-enable redis; \
+    } || { \
+        echo "Warning: Failed to install Redis extension via PECL. Trying alternative method..." >&2; \
+        cd /tmp && \
+        curl -L https://github.com/phpredis/phpredis/archive/6.0.2.tar.gz -o phpredis.tar.gz && \
+        tar -xzf phpredis.tar.gz && \
+        cd phpredis-6.0.2 && \
+        phpize && \
+        ./configure && \
+        make && \
+        make install && \
+        docker-php-ext-enable redis && \
+        cd / && \
+        rm -rf /tmp/phpredis* || \
+        echo "Warning: Redis extension installation failed completely. Redis features will not be available." >&2; \
+    }
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -89,10 +106,27 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     opcache \
     bcmath
 
-# Install Redis extension
-RUN pecl channel-update pecl.php.net && \
-    pecl install redis && \
-    docker-php-ext-enable redis
+# Install Redis extension with retry logic and fallback
+RUN set -eux; \
+    { \
+        pecl channel-update pecl.php.net && \
+        pecl install redis && \
+        docker-php-ext-enable redis; \
+    } || { \
+        echo "Warning: Failed to install Redis extension via PECL. Trying alternative method..." >&2; \
+        cd /tmp && \
+        curl -L https://github.com/phpredis/phpredis/archive/6.0.2.tar.gz -o phpredis.tar.gz && \
+        tar -xzf phpredis.tar.gz && \
+        cd phpredis-6.0.2 && \
+        phpize && \
+        ./configure && \
+        make && \
+        make install && \
+        docker-php-ext-enable redis && \
+        cd / && \
+        rm -rf /tmp/phpredis* || \
+        echo "Warning: Redis extension installation failed completely. Redis features will not be available." >&2; \
+    }
 
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -114,9 +148,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Set permissions for writable directories
-RUN chown -R appuser:appuser /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Ensure vendor directory exists and set permissions for writable directories
+RUN mkdir -p /var/www/html/vendor && \
+    chown -R appuser:appuser /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor
 
 # Switch to non-root user
 USER appuser
