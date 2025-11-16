@@ -80,6 +80,29 @@ RUN pecl channel-update pecl.php.net && \
     docker-php-ext-enable redis
 ```
 
+### Changes to docker-entrypoint.sh
+
+Removed attempts to create or chmod the vendor directory in the entrypoint script:
+
+```sh
+# Before (caused permission errors):
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache vendor
+chmod 777 vendor 2>/dev/null || {
+  err "Warning: Could not set permissions on vendor directory. Composer may fail."
+}
+
+# After (relies on named volume):
+# Note: vendor directory is managed by Docker named volume and created in Dockerfile
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+```
+
+**Why this change is necessary:**
+- The entrypoint script runs as the non-root `appuser`
+- When `appuser` tried to create or chmod the vendor directory, it failed due to permission issues
+- The vendor directory is already created in the Dockerfile with proper permissions
+- The named volume preserves this directory, so the entrypoint doesn't need to manage it
+- Removing these operations prevents the error while maintaining proper functionality
+
 ## How It Works
 
 1. **Named volumes override host mounts**: When both a host mount and a named volume target the same path, the named volume takes precedence for that specific subdirectory.
@@ -255,7 +278,8 @@ For existing deployments, follow these steps:
 This comprehensive fix resolves multiple Docker deployment issues:
 
 1. **Vendor Directory Permissions** - Uses Docker named volumes to preserve built dependencies and maintain proper ownership
-2. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
-3. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
+2. **Entrypoint Script Permissions** - Removes vendor directory creation/chmod from entrypoint script to prevent permission errors when running as non-root user
+3. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
+4. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
 
-The solution is minimal, follows Docker best practices, and improves both security and performance. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
+The solution is minimal, follows Docker best practices, and improves both security and performance. The vendor directory is managed entirely through the Docker build process and named volumes, eliminating runtime permission issues. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
