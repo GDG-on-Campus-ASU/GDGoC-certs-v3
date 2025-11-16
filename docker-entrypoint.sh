@@ -11,12 +11,17 @@ fi
 cd /var/www/html || exit 1
 
 # Ensure writable directories exist with correct permissions
-mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache vendor
 # Set permissions to ensure directories are writable
 # Using 777 for maximum compatibility in dev/CI environments where user IDs may vary
 chmod -R 777 storage bootstrap/cache 2>/dev/null || {
   err "Warning: Could not set permissions on storage/bootstrap/cache. This may cause write errors."
   err "If running in CI, ensure proper permissions are set before running artisan commands."
+}
+
+# Ensure vendor directory is writable
+chmod 777 vendor 2>/dev/null || {
+  err "Warning: Could not set permissions on vendor directory. Composer may fail."
 }
 
 if [ ! -f ./vendor/autoload.php ]; then
