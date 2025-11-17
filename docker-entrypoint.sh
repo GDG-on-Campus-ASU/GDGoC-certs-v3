@@ -26,14 +26,34 @@ mkdir -p vendor
 # Fix ownership - change all files to appuser:appuser
 # This ensures appuser can read/write all application files
 # This is necessary because host mounts may have different ownership
-chown -R appuser:appuser /var/www/html 2>/dev/null || {
-  err "Warning: Could not set ownership. Continuing anyway..."
-}
+if ! chown -R appuser:appuser /var/www/html 2>&1; then
+  err "Warning: Could not set ownership on /var/www/html. Attempting to fix vendor directory only..."
+  # If full chown fails, at least try to fix the vendor directory
+  chown -R appuser:appuser /var/www/html/vendor 2>&1 || {
+    err "ERROR: Could not set ownership on vendor directory."
+    err "This is likely due to running the container without sufficient privileges."
+    err "Make sure the container is running as root initially, or fix host directory permissions."
+    # Try to make vendor world-writable as last resort
+    chmod -R 777 /var/www/html/vendor 2>/dev/null || true
+  }
+fi
 
 # Set permissions for writable directories
-chmod -R 775 storage bootstrap/cache vendor 2>/dev/null || {
-  err "Warning: Could not set all permissions. Some features may not work correctly."
-}
+if ! chmod -R 775 storage bootstrap/cache 2>&1; then
+  err "Warning: Could not set permissions on storage/bootstrap directories."
+  # Try individual directories
+  chmod -R 777 storage 2>/dev/null || true
+  chmod -R 777 bootstrap/cache 2>/dev/null || true
+fi
+
+# Ensure vendor is writable for composer
+if ! chmod -R 775 vendor 2>&1; then
+  err "Warning: Could not set 775 permissions on vendor. Trying 777..."
+  chmod -R 777 vendor 2>/dev/null || {
+    err "ERROR: Could not set any permissions on vendor directory."
+    err "Composer install will likely fail."
+  }
+fi
 
 # Check if vendor/autoload.php exists - this should be present from the Docker image
 if [ ! -f ./vendor/autoload.php ]; then
@@ -57,6 +77,17 @@ if [ ! -f ./vendor/autoload.php ]; then
   err ""
   err "Attempting composer install as a fallback..."
   
+  # Verify vendor directory is writable before attempting composer install
+  if [ ! -w vendor ]; then
+    err "ERROR: vendor directory exists but is not writable!"
+    err "Trying to fix permissions one more time..."
+    chmod 777 vendor 2>/dev/null || {
+      err "FATAL: Cannot make vendor directory writable even as root."
+      err "This may be a filesystem or mount issue."
+      exit 1
+    }
+  fi
+  
   # Attempt composer install as fallback
   # Since we're running as root and have fixed permissions, this should work
   if composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; then
@@ -67,6 +98,11 @@ if [ ! -f ./vendor/autoload.php ]; then
     err ""
     err "Composer install failed. This confirms the image needs to be rebuilt."
     err "Follow the steps above to rebuild the image properly."
+    err ""
+    err "If the error is about vendor directory not being created, this could mean:"
+    err "  1. The container is not running as root (check Dockerfile)"
+    err "  2. There's a filesystem mount issue (check docker-compose.yml volumes)"
+    err "  3. SELinux or AppArmor is blocking the operation (check host security)"
     exit 1
   fi
 fi
