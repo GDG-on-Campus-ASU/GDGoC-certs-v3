@@ -92,6 +92,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     curl \
     zlib1g-dev \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -149,13 +150,12 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Ensure vendor directory exists and set permissions for writable directories
-# Set ownership of /var/www/html itself to allow appuser to create subdirectories
-RUN mkdir -p /var/www/html/vendor && \
+RUN mkdir -p /var/www/html/vendor /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R appuser:appuser /var/www/html && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor
 
-# Switch to non-root user
-USER appuser
+# Note: We don't switch to non-root user yet to allow entrypoint script to fix permissions
+# The entrypoint script will handle permission fixes and then exec as appuser
 
 # Expose port
 EXPOSE 9000

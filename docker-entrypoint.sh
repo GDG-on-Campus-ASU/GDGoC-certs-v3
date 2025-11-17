@@ -10,38 +10,62 @@ fi
 
 cd /var/www/html || exit 1
 
-# Ensure writable directories exist with correct permissions
-# Note: vendor directory is managed by Docker named volume and created in Dockerfile
+# Running as root to fix permissions before switching to appuser
+# This allows us to handle permission issues from host mounts
+
+# Ensure writable directories exist
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-# Set permissions to ensure directories are writable
-# Using 777 for maximum compatibility in dev/CI environments where user IDs may vary
-chmod -R 777 storage bootstrap/cache 2>/dev/null || {
-  err "Warning: Could not set permissions on storage/bootstrap/cache. This may cause write errors."
-  err "If running in CI, ensure proper permissions are set before running artisan commands."
+
+# Ensure vendor directory exists - critical for composer autoload
+# This handles cases where the named volume is empty on first run
+mkdir -p vendor
+
+# Fix ownership - change all files to appuser:appuser
+# This ensures appuser can read/write all application files
+# This is necessary because host mounts may have different ownership
+chown -R appuser:appuser /var/www/html 2>/dev/null || {
+  err "Warning: Could not set ownership. Continuing anyway..."
 }
 
+# Set permissions for writable directories
+chmod -R 775 storage bootstrap/cache vendor 2>/dev/null || {
+  err "Warning: Could not set all permissions. Some features may not work correctly."
+}
+
+# Check if vendor/autoload.php exists - this should be present from the Docker image
 if [ ! -f ./vendor/autoload.php ]; then
-  err "vendor/autoload.php not found — running composer install..."
+  err "ERROR: vendor/autoload.php not found!"
+  err ""
+  err "This usually means the Docker image was not built correctly or needs to be rebuilt."
+  err ""
+  err "To fix this issue:"
+  err "  1. Stop all containers: docker compose down -v"
+  err "  2. Rebuild the image: docker compose build --no-cache"
+  err "  3. Start the services: docker compose up -d"
+  err ""
+  err "The vendor directory should be populated during the Docker build process,"
+  err "not at runtime. If you continue to see this error after rebuilding,"
+  err "there may be an issue with the Docker build itself."
+  err ""
+  err "Diagnostic information:"
+  err "  Current user: $(whoami) ($(id))"
+  err "  Working directory: $(pwd)"
+  ls -la /var/www/html/ | head -20 >&2
+  err ""
+  err "Attempting composer install as a fallback..."
   
-  # Ensure vendor directory exists and is writable
-  if [ ! -d ./vendor ]; then
-    err "Creating vendor directory..."
-    mkdir -p ./vendor || {
-      err "Failed to create vendor directory. Checking permissions..."
-      ls -la /var/www/html/ | head -20
-      err "Current user: $(whoami) ($(id))"
-      exit 1
-    }
-  fi
-  
-  composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || {
-    err "composer install failed"
-    err "Checking vendor directory permissions..."
-    ls -la ./vendor 2>/dev/null || err "vendor directory does not exist or is not accessible"
-    err "Checking /var/www/html ownership..."
-    ls -la /var/www/ | grep html
+  # Attempt composer install as fallback
+  # Since we're running as root and have fixed permissions, this should work
+  if composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; then
+    err "Composer install succeeded as fallback."
+    # Fix ownership of newly installed vendor files
+    chown -R appuser:appuser ./vendor 2>/dev/null || true
+  else
+    err ""
+    err "Composer install failed. This confirms the image needs to be rebuilt."
+    err "Follow the steps above to rebuild the image properly."
     exit 1
-  }
+  fi
 fi
 
 if [ -n "${POSTGRES_HOST:-}" ] && [ -n "${POSTGRES_USER:-}" ] && [ -n "${POSTGRES_DB:-}" ]; then
@@ -64,10 +88,13 @@ fi
 
 if [ "${MIGRATE_ON_START:-false}" = "true" ]; then
   err "Running migrations (MIGRATE_ON_START=true)..."
-  php artisan migrate --force || {
+  # Run migrations as appuser
+  gosu appuser php artisan migrate --force || {
     err "php artisan migrate failed"
     exit 1
   }
 fi
 
-exec "$@"
+# Execute the main command as appuser for security
+# gosu is like sudo but better for Docker - it replaces the current process
+exec gosu appuser "$@"
