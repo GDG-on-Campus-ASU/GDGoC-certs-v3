@@ -77,6 +77,17 @@ if [ ! -f ./vendor/autoload.php ]; then
   err ""
   err "Attempting composer install as a fallback..."
   
+  # Verify vendor directory is writable before attempting composer install
+  if [ ! -w vendor ]; then
+    err "ERROR: vendor directory exists but is not writable!"
+    err "Trying to fix permissions one more time..."
+    chmod 777 vendor 2>/dev/null || {
+      err "FATAL: Cannot make vendor directory writable even as root."
+      err "This may be a filesystem or mount issue."
+      exit 1
+    }
+  fi
+  
   # Attempt composer install as fallback
   # Since we're running as root and have fixed permissions, this should work
   if composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; then
@@ -87,6 +98,11 @@ if [ ! -f ./vendor/autoload.php ]; then
     err ""
     err "Composer install failed. This confirms the image needs to be rebuilt."
     err "Follow the steps above to rebuild the image properly."
+    err ""
+    err "If the error is about vendor directory not being created, this could mean:"
+    err "  1. The container is not running as root (check Dockerfile)"
+    err "  2. There's a filesystem mount issue (check docker-compose.yml volumes)"
+    err "  3. SELinux or AppArmor is blocking the operation (check host security)"
     exit 1
   fi
 fi
