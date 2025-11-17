@@ -65,11 +65,11 @@ A secure, multi-tenant certificate generation platform built with Laravel 11, Po
 
 This project includes a complete Docker setup with:
 - Multi-stage Dockerfile for optimized production images
+- Apache web server with mod_php (single container for web and PHP)
 - Queue worker for background jobs
 - Scheduler for Laravel scheduled tasks
 - Redis for caching and queues
 - PostgreSQL (default) and MySQL (alternative) databases
-- NGINX for internal routing
 
 1. **Start Docker containers**
    ```bash
