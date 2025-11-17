@@ -273,13 +273,70 @@ For existing deployments, follow these steps:
 - [Docker Volume Best Practices](https://docs.docker.com/storage/volumes/)
 - [Laravel Docker Deployment](https://laravel.com/docs/deployment)
 
+## Additional Fix (November 2025)
+
+### Updated Root Cause
+Even with named volumes, the vendor directory permission issue persisted when the named volume was empty on first run. The issue was:
+
+1. The Dockerfile only set ownership on specific subdirectories (`storage`, `bootstrap/cache`, `vendor`)
+2. But it didn't change ownership of `/var/www/html` itself
+3. When the named volume for vendor was empty, `appuser` couldn't create the vendor directory because it lacked write permissions to the parent directory
+
+### Additional Changes to Dockerfile
+Changed the ownership command to include the entire `/var/www/html` directory:
+
+```dockerfile
+# Before:
+RUN chown -R appuser:appuser /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor
+
+# After:
+RUN chown -R appuser:appuser /var/www/html
+```
+
+This allows `appuser` to create new subdirectories (like `vendor`) when needed.
+
+### Additional Changes to docker-entrypoint.sh
+Added explicit vendor directory creation with better error handling:
+
+```sh
+if [ ! -f ./vendor/autoload.php ]; then
+  err "vendor/autoload.php not found — running composer install..."
+  
+  # Ensure vendor directory exists and is writable
+  if [ ! -d ./vendor ]; then
+    err "Creating vendor directory..."
+    mkdir -p ./vendor || {
+      err "Failed to create vendor directory. Checking permissions..."
+      ls -la /var/www/html/ | head -20
+      err "Current user: $(whoami) ($(id))"
+      exit 1
+    }
+  fi
+  
+  composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || {
+    err "composer install failed"
+    err "Checking vendor directory permissions..."
+    ls -la ./vendor 2>/dev/null || err "vendor directory does not exist or is not accessible"
+    err "Checking /var/www/html ownership..."
+    ls -la /var/www/ | grep html
+    exit 1
+  }
+fi
+```
+
+This provides:
+- Explicit vendor directory creation before running composer
+- Detailed diagnostic output if directory creation fails
+- Better error messages to help identify permission issues
+
 ## Summary
 
 This comprehensive fix resolves multiple Docker deployment issues:
 
 1. **Vendor Directory Permissions** - Uses Docker named volumes to preserve built dependencies and maintain proper ownership
-2. **Entrypoint Script Permissions** - Removes vendor directory creation/chmod from entrypoint script to prevent permission errors when running as non-root user
-3. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
-4. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
+2. **Parent Directory Ownership** - Sets ownership of `/var/www/html` itself to `appuser` to allow subdirectory creation
+3. **Entrypoint Script Improvements** - Adds explicit vendor directory creation with detailed error diagnostics
+4. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
+5. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
 
-The solution is minimal, follows Docker best practices, and improves both security and performance. The vendor directory is managed entirely through the Docker build process and named volumes, eliminating runtime permission issues. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
+The solution is minimal, follows Docker best practices, and improves both security and performance. The vendor directory is managed entirely through the Docker build process and named volumes, with proper ownership set to allow runtime directory creation when needed. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
