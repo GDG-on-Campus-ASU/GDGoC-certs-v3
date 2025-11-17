@@ -22,8 +22,24 @@ chmod -R 777 storage bootstrap/cache 2>/dev/null || {
 
 if [ ! -f ./vendor/autoload.php ]; then
   err "vendor/autoload.php not found — running composer install..."
+  
+  # Ensure vendor directory exists and is writable
+  if [ ! -d ./vendor ]; then
+    err "Creating vendor directory..."
+    mkdir -p ./vendor || {
+      err "Failed to create vendor directory. Checking permissions..."
+      ls -la /var/www/html/ | head -20
+      err "Current user: $(whoami) ($(id))"
+      exit 1
+    }
+  fi
+  
   composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || {
     err "composer install failed"
+    err "Checking vendor directory permissions..."
+    ls -la ./vendor 2>/dev/null || err "vendor directory does not exist or is not accessible"
+    err "Checking /var/www/html ownership..."
+    ls -la /var/www/ | grep html
     exit 1
   }
 fi
