@@ -26,14 +26,34 @@ mkdir -p vendor
 # Fix ownership - change all files to appuser:appuser
 # This ensures appuser can read/write all application files
 # This is necessary because host mounts may have different ownership
-chown -R appuser:appuser /var/www/html 2>/dev/null || {
-  err "Warning: Could not set ownership. Continuing anyway..."
-}
+if ! chown -R appuser:appuser /var/www/html 2>&1; then
+  err "Warning: Could not set ownership on /var/www/html. Attempting to fix vendor directory only..."
+  # If full chown fails, at least try to fix the vendor directory
+  chown -R appuser:appuser /var/www/html/vendor 2>&1 || {
+    err "ERROR: Could not set ownership on vendor directory."
+    err "This is likely due to running the container without sufficient privileges."
+    err "Make sure the container is running as root initially, or fix host directory permissions."
+    # Try to make vendor world-writable as last resort
+    chmod -R 777 /var/www/html/vendor 2>/dev/null || true
+  }
+fi
 
 # Set permissions for writable directories
-chmod -R 775 storage bootstrap/cache vendor 2>/dev/null || {
-  err "Warning: Could not set all permissions. Some features may not work correctly."
-}
+if ! chmod -R 775 storage bootstrap/cache 2>&1; then
+  err "Warning: Could not set permissions on storage/bootstrap directories."
+  # Try individual directories
+  chmod -R 777 storage 2>/dev/null || true
+  chmod -R 777 bootstrap/cache 2>/dev/null || true
+fi
+
+# Ensure vendor is writable for composer
+if ! chmod -R 775 vendor 2>&1; then
+  err "Warning: Could not set 775 permissions on vendor. Trying 777..."
+  chmod -R 777 vendor 2>/dev/null || {
+    err "ERROR: Could not set any permissions on vendor directory."
+    err "Composer install will likely fail."
+  }
+fi
 
 # Check if vendor/autoload.php exists - this should be present from the Docker image
 if [ ! -f ./vendor/autoload.php ]; then
