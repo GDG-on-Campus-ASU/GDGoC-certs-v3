@@ -16,6 +16,9 @@ cd /var/www/html || exit 1
 # Ensure writable directories exist
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
+# Ensure PHP-FPM log file location exists
+touch storage/logs/php-fpm.log 2>/dev/null || true
+
 # Ensure vendor directory exists - critical for composer autoload
 # This handles cases where the named volume is empty on first run
 mkdir -p vendor
@@ -95,6 +98,11 @@ if [ "${MIGRATE_ON_START:-false}" = "true" ]; then
   }
 fi
 
-# Execute the main command as appuser for security
-# gosu is like sudo but better for Docker - it replaces the current process
-exec gosu appuser "$@"
+# Execute the main command
+# For php-fpm, run as root since it manages its own user privileges
+# For other commands (like artisan), run as appuser for security
+if [ "$1" = "php-fpm" ]; then
+  exec "$@"
+else
+  exec gosu appuser "$@"
+fi
