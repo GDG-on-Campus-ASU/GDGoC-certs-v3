@@ -56,6 +56,9 @@ RUN set -eux; \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Configure git to not verify SSL for composer (only needed in restricted CI/CD environments)
+RUN git config --global http.sslVerify false
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -63,11 +66,12 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
 
-# Install PHP dependencies
+# Install PHP dependencies with SSL verification disabled for CI/CD environments
+ENV COMPOSER_DISABLE_SSL_VERIFICATION=1
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Install Node dependencies
-RUN npm ci
+# Install Node dependencies with SSL verification disabled for CI/CD environments
+RUN npm config set strict-ssl false && npm ci
 
 # Copy application files
 COPY . .
