@@ -80,6 +80,15 @@ jobs:
           echo "REDIS_PORT=6379" >> .env
           echo "APP_PORT=8000" >> .env
 
+      - name: Prepare writable directories on host
+        run: |
+          echo "Creating Laravel storage and cache directories with proper permissions..."
+          # Create directories on host BEFORE Docker mounts them
+          mkdir -p storage/app/public storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+          # Set permissive permissions for CI environment
+          chmod -R 777 storage bootstrap/cache
+          echo "Directories prepared successfully"
+
       - name: Build and start Docker Compose services
         run: |
           # Build php image with host network to avoid DNS issues with PECL
@@ -147,14 +156,6 @@ jobs:
             sleep 2
           done
           echo "Redis is ready"
-
-      - name: Set Laravel directory permissions
-        run: |
-          echo "Setting permissions for Laravel storage and cache directories..."
-          # Create directories on host with proper permissions before they're mounted
-          mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
-          chmod -R 777 storage bootstrap/cache
-          echo "Permissions set successfully"
 
       - name: Run database migrations (with retries)
         run: |

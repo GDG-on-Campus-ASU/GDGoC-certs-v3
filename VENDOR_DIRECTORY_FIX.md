@@ -273,13 +273,90 @@ For existing deployments, follow these steps:
 - [Docker Volume Best Practices](https://docs.docker.com/storage/volumes/)
 - [Laravel Docker Deployment](https://laravel.com/docs/deployment)
 
+## Additional Fix (November 2025) - Revision 2
+
+### Root Cause of Persistent Issue
+The initial fix didn't fully resolve the problem because of how Docker Compose volume mounts interact:
+
+1. **Volume Mount Order**: When docker-compose mounts `.:/var/www/html`, it replaces the entire directory with the host directory
+2. **Host Directory Ownership**: The host directory is owned by the host user (not UID 1000), so when mounted, `/var/www/html` becomes owned by the host user
+3. **Named Volume Limitation**: Even though `vendor:/var/www/html/vendor` is mounted as a named volume, the parent directory is still owned by the host user
+4. **Permission Denied**: The `appuser` (UID 1000) cannot create or modify files in directories owned by the host user
+
+The previous fix attempted to set ownership in the Dockerfile, but this was overridden by the host mount.
+
+### Final Solution: Root Entrypoint with gosu
+
+The correct solution is to run the entrypoint script as root, fix all permissions, then switch to `appuser` for executing the application:
+
+**Changes to Dockerfile:**
+1. Install `gosu` package for secure user switching
+2. Remove `USER appuser` directive - let the container start as root
+3. The entrypoint script will handle the user switch
+
+```dockerfile
+# Install gosu for secure user switching
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ...
+    gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+# Note: We don't switch to non-root user yet to allow entrypoint script to fix permissions
+# The entrypoint script will handle permission fixes and then exec as appuser
+```
+
+**Changes to docker-entrypoint.sh:**
+The script now:
+1. Runs as root initially
+2. Creates all necessary directories (including vendor)
+3. Fixes ownership to `appuser:appuser` for all files
+4. Sets appropriate permissions
+5. Attempts composer install if vendor/autoload.php is missing
+6. Uses `gosu` to exec the final command as `appuser`
+
+```sh
+# Running as root to fix permissions before switching to appuser
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+mkdir -p vendor
+
+# Fix ownership - change all files to appuser:appuser
+chown -R appuser:appuser /var/www/html 2>/dev/null || {
+  err "Warning: Could not set ownership. Continuing anyway..."
+}
+
+# Set permissions for writable directories
+chmod -R 775 storage bootstrap/cache vendor 2>/dev/null || {
+  err "Warning: Could not set all permissions. Some features may not work correctly."
+}
+
+# ... composer install if needed ...
+
+# Execute the main command as appuser for security
+exec gosu appuser "$@"
+```
+
+### Why This Solution Works
+
+1. **Root Privileges**: Running as root allows fixing permissions on host-mounted directories
+2. **gosu for Security**: After fixing permissions, `gosu` properly switches to `appuser` and execs the command, maintaining security
+3. **Handles All Cases**: Works whether vendor exists in the image, in the named volume, or needs to be installed
+4. **No Restart Loop**: If composer install fails, provides clear instructions instead of exiting immediately
+
 ## Summary
 
 This comprehensive fix resolves multiple Docker deployment issues:
 
 1. **Vendor Directory Permissions** - Uses Docker named volumes to preserve built dependencies and maintain proper ownership
-2. **Entrypoint Script Permissions** - Removes vendor directory creation/chmod from entrypoint script to prevent permission errors when running as non-root user
-3. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
-4. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
+2. **Root Entrypoint with gosu** - Entrypoint runs as root to fix permissions from host mounts, then securely switches to `appuser` using gosu
+3. **Automatic Permission Fixing** - All permission issues are resolved on container startup by the root-level entrypoint
+4. **Graceful Fallback** - If vendor is missing, attempts composer install with clear error messages and instructions
+5. **Nginx Startup Race Condition** - Adds PHP health checks to ensure nginx starts only when PHP-FPM is ready
+6. **Storage/Cache Permissions** - Removes redundant mounts and adds automatic permission fixes in the entrypoint script
 
-The solution is minimal, follows Docker best practices, and improves both security and performance. The vendor directory is managed entirely through the Docker build process and named volumes, eliminating runtime permission issues. All permission issues are automatically resolved on container startup, ensuring a smooth deployment experience.
+The solution follows Docker best practices by:
+- Running the application as a non-root user (`appuser`) for security
+- Using the entrypoint to handle permission fixes before switching users
+- Utilizing `gosu` for clean process replacement when switching users
+- Maintaining proper ownership across host mounts and named volumes
+
+All permission issues are automatically resolved on container startup, whether you're using host mounts for development or named volumes for production, ensuring a smooth deployment experience.
