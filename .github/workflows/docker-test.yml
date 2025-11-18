@@ -93,7 +93,7 @@ jobs:
         run: |
           # Build php image with host network to avoid DNS issues with PECL
           DOCKER_BUILDKIT=1 docker compose build --pull --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 php
-          docker compose up -d --build postgres redis php nginx
+          docker compose up -d --build postgres redis php
 
       - name: Wait for containers to be running
         run: |
@@ -107,9 +107,8 @@ jobs:
             if docker compose ps postgres | grep -q "Up"; then running_count=$((running_count + 1)); fi
             if docker compose ps redis | grep -q "Up"; then running_count=$((running_count + 1)); fi
             if docker compose ps php | grep -q "Up"; then running_count=$((running_count + 1)); fi
-            if docker compose ps nginx | grep -q "Up"; then running_count=$((running_count + 1)); fi
             
-            if [ "$running_count" -ge 4 ]; then
+            if [ "$running_count" -ge 3 ]; then
               echo "All required containers are running"
               break
             fi
@@ -180,7 +179,7 @@ jobs:
       - name: Test application health (stable)
         run: |
           echo "Testing if application is responding..."
-          # Give nginx and php-fpm a moment to fully initialize
+          # Give Apache a moment to fully initialize
           sleep 5
           APP_PORT="${APP_PORT:-8000}"
           attempts=0
@@ -197,7 +196,6 @@ jobs:
             sleep 5
           done
           echo "Application did not respond with a healthy status after $max_attempts attempts"
-          docker compose logs nginx --tail=200
           docker compose logs php --tail=200
           exit 1
         env:
@@ -215,11 +213,8 @@ jobs:
           echo "=== Redis Logs ==="
           docker compose logs redis --tail=300
           echo ""
-          echo "=== PHP Logs ==="
+          echo "=== PHP/Apache Logs ==="
           docker compose logs php --tail=300
-          echo ""
-          echo "=== Nginx Logs ==="
-          docker compose logs nginx --tail=300
 
       - name: Clean up
         if: always()

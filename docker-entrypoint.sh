@@ -23,13 +23,13 @@ touch storage/logs/php-fpm.log 2>/dev/null || true
 # This handles cases where the named volume is empty on first run
 mkdir -p vendor
 
-# Fix ownership - change all files to appuser:appuser
-# This ensures appuser can read/write all application files
+# Fix ownership - change all files to www-data:www-data (Apache user)
+# This ensures www-data can read/write all application files
 # This is necessary because host mounts may have different ownership
-if ! chown -R appuser:appuser /var/www/html 2>&1; then
+if ! chown -R www-data:www-data /var/www/html 2>&1; then
   err "Warning: Could not set ownership on /var/www/html. Attempting to fix vendor directory only..."
   # If full chown fails, at least try to fix the vendor directory
-  chown -R appuser:appuser /var/www/html/vendor 2>&1 || {
+  chown -R www-data:www-data /var/www/html/vendor 2>&1 || {
     err "ERROR: Could not set ownership on vendor directory."
     err "This is likely due to running the container without sufficient privileges."
     err "Make sure the container is running as root initially, or fix host directory permissions."
@@ -93,7 +93,7 @@ if [ ! -f ./vendor/autoload.php ]; then
   if composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; then
     err "Composer install succeeded as fallback."
     # Fix ownership of newly installed vendor files
-    chown -R appuser:appuser ./vendor 2>/dev/null || true
+    chown -R www-data:www-data ./vendor 2>/dev/null || true
   else
     err ""
     err "Composer install failed. This confirms the image needs to be rebuilt."
@@ -127,18 +127,18 @@ fi
 
 if [ "${MIGRATE_ON_START:-false}" = "true" ]; then
   err "Running migrations (MIGRATE_ON_START=true)..."
-  # Run migrations as appuser
-  gosu appuser php artisan migrate --force || {
+  # Run migrations as www-data
+  gosu www-data php artisan migrate --force || {
     err "php artisan migrate failed"
     exit 1
   }
 fi
 
 # Execute the main command
-# For php-fpm, run as root since it manages its own user privileges
-# For other commands (like artisan), run as appuser for security
-if [ "$1" = "php-fpm" ]; then
+# For apache2-foreground, run as root since Apache manages its own user privileges
+# For other commands (like artisan), run as www-data for security
+if [ "$1" = "apache2-foreground" ]; then
   exec "$@"
 else
-  exec gosu appuser "$@"
+  exec gosu www-data "$@"
 fi
