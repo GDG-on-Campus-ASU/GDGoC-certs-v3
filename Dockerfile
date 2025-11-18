@@ -1,6 +1,6 @@
 # Multi-stage build for optimized production image
 # Stage 1: Build dependencies
-FROM php:8.3-fpm AS builder
+FROM php:8.3-apache AS builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -56,6 +56,9 @@ RUN set -eux; \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Configure git to not verify SSL for composer (only needed in restricted CI/CD environments)
+RUN git config --global http.sslVerify false
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -63,11 +66,12 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
 
-# Install PHP dependencies
+# Install PHP dependencies with SSL verification disabled for CI/CD environments
+ENV COMPOSER_DISABLE_SSL_VERIFICATION=1
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Install Node dependencies
-RUN npm ci
+# Install Node dependencies with SSL verification disabled for CI/CD environments
+RUN npm config set strict-ssl false && npm ci
 
 # Copy application files
 COPY . .
@@ -76,7 +80,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image
-FROM php:8.3-fpm
+FROM php:8.3-apache
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -132,6 +136,9 @@ RUN set -eux; \
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+# Enable Apache modules
+RUN a2enmod rewrite headers
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -140,7 +147,7 @@ RUN groupadd -g 1000 appuser && \
     useradd -u 1000 -g appuser -s /bin/bash -m appuser
 
 # Copy application from builder
-COPY --from=builder --chown=appuser:appuser /var/www/html /var/www/html
+COPY --from=builder --chown=www-data:www-data /var/www/html /var/www/html
 
 # Copy composer for runtime dependency installation
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -149,20 +156,29 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Copy PHP-FPM pool configuration to use appuser
-COPY docker/php-fpm/www.conf /usr/local/etc/php-fpm.d/www.conf
+# Create Apache virtual host configuration
+RUN echo '<VirtualHost *:80>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html/public\n\
+    \n\
+    <Directory /var/www/html/public>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    \n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Ensure vendor directory exists and set permissions for writable directories
 RUN mkdir -p /var/www/html/vendor /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chown -R appuser:appuser /var/www/html && \
+    chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor
 
-# Note: We don't switch to non-root user yet to allow entrypoint script to fix permissions
-# The entrypoint script will handle permission fixes and then exec as appuser
-
 # Expose port
-EXPOSE 9000
+EXPOSE 80
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["php-fpm"]
+CMD ["apache2-foreground"]
