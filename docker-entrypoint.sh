@@ -16,9 +16,6 @@ cd /var/www/html || exit 1
 # Ensure writable directories exist
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
-# Ensure PHP-FPM log file location exists
-touch storage/logs/php-fpm.log 2>/dev/null || true
-
 # Ensure vendor directory exists - critical for composer autoload
 # This handles cases where the named volume is empty on first run
 mkdir -p vendor
