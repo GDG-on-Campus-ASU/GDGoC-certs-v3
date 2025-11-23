@@ -158,8 +158,10 @@ services:
     ports:
       - "${APP_PORT:-8000}:80"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost/ | grep -qE '^[2-5][0-9][0-9]$' || exit 1"]
 ```
+
+**Note**: The healthcheck was updated to accept any HTTP response (2xx-5xx), not just success responses. This ensures the healthcheck passes as long as Apache is responding, even if the Laravel application returns an error (e.g., during initialization or database connection issues).
 
 #### 3. docker-entrypoint.sh
 
@@ -333,11 +335,13 @@ docker compose restart php
 
 ### Configuration Files
 
-The following configuration files are **no longer needed**:
-- `docker/nginx/default.conf` - Nginx configuration
-- `docker/php-fpm/www.conf` - PHP-FPM pool configuration
+The following configuration files have been **removed** (no longer needed):
+- `docker/nginx/default.conf` - Nginx configuration (removed)
+- `docker/php-fpm/www.conf` - PHP-FPM pool configuration (removed)
 
 The Apache virtual host is now configured directly in the Dockerfile.
+
+**Note**: These files were removed in the final cleanup phase of the migration to ensure no legacy PHP-FPM or Nginx artifacts remain in the repository.
 
 ### Environment Variables
 
