@@ -47,23 +47,23 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Install Redis extension with retry logic and fallback
 RUN set -eux; \
     { \
-        pecl channel-update pecl.php.net && \
-        pecl install redis && \
-        docker-php-ext-enable redis; \
+    pecl channel-update pecl.php.net && \
+    pecl install redis && \
+    docker-php-ext-enable redis; \
     } || { \
-        echo "Warning: Failed to install Redis extension via PECL. Trying alternative method..." >&2; \
-        cd /tmp && \
-        curl -L https://github.com/phpredis/phpredis/archive/6.0.2.tar.gz -o phpredis.tar.gz && \
-        tar -xzf phpredis.tar.gz && \
-        cd phpredis-6.0.2 && \
-        phpize && \
-        ./configure && \
-        make && \
-        make install && \
-        docker-php-ext-enable redis && \
-        cd / && \
-        rm -rf /tmp/phpredis* || \
-        echo "Warning: Redis extension installation failed completely. Redis features will not be available." >&2; \
+    echo "Warning: Failed to install Redis extension via PECL. Trying alternative method..." >&2; \
+    cd /tmp && \
+    curl -L https://github.com/phpredis/phpredis/archive/6.0.2.tar.gz -o phpredis.tar.gz && \
+    tar -xzf phpredis.tar.gz && \
+    cd phpredis-6.0.2 && \
+    phpize && \
+    ./configure && \
+    make && \
+    make install && \
+    docker-php-ext-enable redis && \
+    cd / && \
+    rm -rf /tmp/phpredis* || \
+    echo "Warning: Redis extension installation failed completely. Redis features will not be available." >&2; \
     }
 
 # Configure PHP for production
@@ -84,7 +84,6 @@ COPY . .
 
 # Copy built assets from node_builder
 COPY --from=node_builder /app/public/build /var/www/html/public/build
-COPY --from=node_builder /app/public/hot /var/www/html/public/hot
 
 # Copy composer dependencies from composer_builder
 COPY --from=composer_builder /app/vendor /var/www/html/vendor
@@ -102,14 +101,14 @@ RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     \n\
     <Directory /var/www/html/public>\n\
-        Options Indexes FollowSymLinks\n\
-        AllowOverride All\n\
-        Require all granted\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
     </Directory>\n\
     \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+    </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Ensure vendor directory exists and set permissions for writable directories
 # We do this AFTER copying vendor to ensure permissions are correct
