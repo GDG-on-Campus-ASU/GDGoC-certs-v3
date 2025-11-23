@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed documentation pages
-        $this->call(DocumentationSeeder::class);
+        $this->call([
+            DocumentationSeeder::class,
+        ]);
     }
 }
