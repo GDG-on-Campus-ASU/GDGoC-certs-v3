@@ -1,92 +1,25 @@
 # Multi-stage build for optimized production image
-# Stage 1: Build dependencies
-FROM php:8.3-apache AS builder
+
+# Stage 1: Build frontend assets
+FROM node:20-bookworm AS node_builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage 2: Build PHP dependencies
+FROM composer:2 AS composer_builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs
+
+# Stage 3: Production image
+FROM php:8.3-apache-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    default-libmysqlclient-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libicu-dev \
-    libonig-dev \
-    git \
-    curl \
-    nodejs \
-    npm \
-    zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions including Redis, BCMath, PDO MySQL
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_pgsql \
-    pgsql \
-    pdo_mysql \
-    gd \
-    zip \
-    opcache \
-    bcmath
-
-# Install Redis extension with retry logic and fallback
-RUN set -eux; \
-    { \
-        pecl channel-update pecl.php.net && \
-        pecl install redis && \
-        docker-php-ext-enable redis; \
-    } || { \
-        echo "Warning: Failed to install Redis extension via PECL. Trying alternative method..." >&2; \
-        cd /tmp && \
-        curl -L https://github.com/phpredis/phpredis/archive/6.0.2.tar.gz -o phpredis.tar.gz && \
-        tar -xzf phpredis.tar.gz && \
-        cd phpredis-6.0.2 && \
-        phpize && \
-        ./configure && \
-        make && \
-        make install && \
-        docker-php-ext-enable redis && \
-        cd / && \
-        rm -rf /tmp/phpredis* || \
-        echo "Warning: Redis extension installation failed completely. Redis features will not be available." >&2; \
-    }
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Configure git to not verify SSL for composer (only needed in restricted CI/CD environments)
-RUN git config --global http.sslVerify false
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy dependency files first for better caching
-COPY composer.json composer.lock ./
-COPY package.json package-lock.json ./
-
-# Install PHP dependencies with SSL verification disabled for CI/CD environments
-ENV COMPOSER_DISABLE_SSL_VERIFICATION=1
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-# Install Node dependencies with SSL verification disabled for CI/CD environments
-RUN npm config set strict-ssl false && npm ci
-
-# Copy application files
-COPY . .
-
-# Build assets
-RUN npm run build
-
-# Stage 2: Production image
-FROM php:8.3-apache
-
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    libpq-dev \
-    default-mysql-client \
     default-libmysqlclient-dev \
     libpng-dev \
     libjpeg-dev \
@@ -99,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
+# Install PHP extensions including Redis, BCMath, PDO MySQL
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo \
@@ -146,10 +79,17 @@ WORKDIR /var/www/html
 RUN groupadd -g 1000 appuser && \
     useradd -u 1000 -g appuser -s /bin/bash -m appuser
 
-# Copy application from builder
-COPY --from=builder --chown=www-data:www-data /var/www/html /var/www/html
+# Copy application files
+COPY . .
 
-# Copy composer for runtime dependency installation
+# Copy built assets from node_builder
+COPY --from=node_builder /app/public/build /var/www/html/public/build
+COPY --from=node_builder /app/public/hot /var/www/html/public/hot
+
+# Copy composer dependencies from composer_builder
+COPY --from=composer_builder /app/vendor /var/www/html/vendor
+
+# Copy composer binary for runtime usage
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy and configure entrypoint script
@@ -172,7 +112,8 @@ RUN echo '<VirtualHost *:80>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Ensure vendor directory exists and set permissions for writable directories
-RUN mkdir -p /var/www/html/vendor /var/www/html/storage /var/www/html/bootstrap/cache && \
+# We do this AFTER copying vendor to ensure permissions are correct
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/vendor
 
