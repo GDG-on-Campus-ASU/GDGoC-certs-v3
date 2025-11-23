@@ -20,7 +20,6 @@ FROM php:8.3-apache-bookworm
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    default-libmysqlclient-dev \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
@@ -38,7 +37,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     pdo \
     pdo_pgsql \
     pgsql \
-    pdo_mysql \
     gd \
     zip \
     opcache \

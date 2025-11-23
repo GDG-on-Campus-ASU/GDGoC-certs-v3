@@ -15,28 +15,7 @@ services:
       - gdgoc-network
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gdgoc_user} -d ${POSTGRES_DB:-gdgoc_certs}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # MySQL Database (alternative to PostgreSQL)
-  mysql:
-    image: mysql:8.0
-    container_name: gdgoc-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-gdgoc_certs}
-      MYSQL_USER: ${MYSQL_USER:-gdgoc_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
-    networks:
-      - gdgoc-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootsecret}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gdgoc_user} -d ${POSTGRES_DB:-gdgoc_certs}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,7 +32,7 @@ services:
       - gdgoc-network
     restart: on-failure
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,7 +69,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost/ | grep -qE '^[2-5][0-9][0-9]$' || exit 1"]
+      test: [ "CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost/ | grep -qE '^[2-5][0-9][0-9]$' || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -171,8 +150,6 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
-  mysql_data:
     driver: local
   redis_data:
     driver: local
