@@ -113,7 +113,17 @@ jobs:
               break
             fi
             sleep 2
+            if [ "$running_count" -ge 3 ]; then
+              echo "All required containers are running"
+              break
+            fi
+            sleep 2
           done
+          
+          # Wait for 4 minutes to ensure stability as requested
+          echo "Waiting for 4 minutes to ensure container stability..."
+          sleep 240
+          
           if [ $SECONDS -gt $end ]; then
             echo "Timeout waiting for containers to be Up"
             docker compose ps
@@ -175,6 +185,12 @@ jobs:
             sleep 5
           done
           echo "Migrations completed"
+
+      - name: Run Link Accessibility Test
+        run: |
+          echo "Running Link Accessibility Test..."
+          docker compose exec -T php php artisan test --filter LinkAccessibilityTest
+
 
       - name: Test application health (stable)
         run: |

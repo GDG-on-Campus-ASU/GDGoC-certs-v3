@@ -5,6 +5,15 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - '**.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'phpunit.xml'
+      - '.env.example'
+      - '.github/workflows/laravel.yml'
 
 jobs:
   tests:
