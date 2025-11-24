@@ -195,7 +195,7 @@ jobs:
           echo "Running database migrations..."
           # Run migrations using docker compose exec once PHP is up and stable. Retry on failure.
           attempts=0
-          max_attempts=6
+          max_attempts=12
           until docker compose exec -T php php artisan migrate --force; do
             attempts=$((attempts+1))
             echo "Migration attempt $attempts failed — sleeping before retry..."
