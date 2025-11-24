@@ -65,6 +65,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Fix workspace ownership
+        run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+
+      - name: Configure Kernel for Redis
+        run: sudo sysctl -w vm.overcommit_memory=1
+
       - name: Create .env file
         run: |
           if [ -f .env.example ]; then
