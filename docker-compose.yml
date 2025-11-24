@@ -18,7 +18,8 @@ services:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gdgoc_user} -d ${POSTGRES_DB:-gdgoc_certs}" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # Redis Cache and Queue
   redis:
@@ -35,7 +36,8 @@ services:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
     command: redis-server --appendonly yes
 
   # PHP + Apache Service (combined web server and PHP runtime)
@@ -72,8 +74,8 @@ services:
       test: [ "CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost/ | grep -qE '^[2-5][0-9][0-9]$' || exit 1" ]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
     networks:
       - gdgoc-network
     restart: on-failure

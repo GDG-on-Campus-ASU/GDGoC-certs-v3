@@ -64,9 +64,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Fix workspace ownership
-        run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+        run: |
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+          sudo chmod -R u+w $GITHUB_WORKSPACE/.git
 
       - name: Configure Kernel for Redis
         run: sudo sysctl -w vm.overcommit_memory=1
@@ -78,13 +82,16 @@ jobs:
           else
             touch .env
           fi
-          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+          echo "APP_KEY=base64:2fl+Ktvkfl+Fuz4Qp/yWcihukHot4hDOqmjD++L3xVs=" >> .env
           echo "DB_CONNECTION=pgsql" >> .env
           echo "DB_HOST=postgres" >> .env
           echo "DB_PORT=5432" >> .env
           echo "DB_DATABASE=gdgoc_certs" >> .env
           echo "DB_USERNAME=gdgoc_user" >> .env
           echo "DB_PASSWORD=secret" >> .env
+          echo "POSTGRES_DB=gdgoc_certs" >> .env
+          echo "POSTGRES_USER=gdgoc_user" >> .env
+          echo "POSTGRES_PASSWORD=secret" >> .env
           echo "REDIS_HOST=redis" >> .env
           echo "REDIS_PORT=6379" >> .env
           echo "APP_PORT=8000" >> .env
@@ -104,37 +111,45 @@ jobs:
           DOCKER_BUILDKIT=1 docker compose build --pull --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 php
           docker compose up -d --build postgres redis php
 
-      - name: Wait for containers to be running
+      - name: Wait for containers to be healthy
         run: |
-          echo "Waiting for containers to appear as Up..."
-          max_wait=180
+          echo "Waiting for containers to be healthy..."
+          max_wait=300
           end=$((SECONDS + max_wait))
           while [ $SECONDS -le $end ]; do
             docker compose ps
-            # Check if all required containers are running by checking their status individually
-            running_count=0
-            if docker compose ps postgres | grep -q "Up"; then running_count=$((running_count + 1)); fi
-            if docker compose ps redis | grep -q "Up"; then running_count=$((running_count + 1)); fi
-            if docker compose ps php | grep -q "Up"; then running_count=$((running_count + 1)); fi
+            # Check if all required containers are healthy by checking Docker health status
+            healthy_count=0
             
-            if [ "$running_count" -ge 3 ]; then
-              echo "All required containers are running"
+            # Check postgres health - look for "(healthy)" in the status
+            if docker compose ps postgres | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ Postgres is healthy"
+            fi
+            
+            # Check redis health - look for "(healthy)" in the status
+            if docker compose ps redis | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ Redis is healthy"
+            fi
+            
+            # Check php health - look for "(healthy)" in the status
+            if docker compose ps php | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ PHP is healthy"
+            fi
+            
+            if [ "$healthy_count" -ge 3 ]; then
+              echo "All required containers are healthy"
               break
             fi
-            sleep 2
-            if [ "$running_count" -ge 3 ]; then
-              echo "All required containers are running"
-              break
-            fi
-            sleep 2
+            
+            echo "Waiting for services to be healthy ($healthy_count/3)..."
+            sleep 5
           done
           
-          # Wait for 4 minutes to ensure stability as requested
-          echo "Waiting for 4 minutes to ensure container stability..."
-          sleep 240
-          
           if [ $SECONDS -gt $end ]; then
-            echo "Timeout waiting for containers to be Up"
+            echo "Timeout waiting for containers to be healthy"
             docker compose ps
             docker compose logs --tail=200
             exit 1
@@ -145,7 +160,7 @@ jobs:
           echo "Waiting for PostgreSQL to be ready (pg_isready)..."
           DB_USER="${DB_USERNAME:-gdgoc_user}"
           DB_NAME="${DB_DATABASE:-gdgoc_certs}"
-          max_wait=180
+          max_wait=300
           end=$((SECONDS + max_wait))
           until timeout 10 docker compose exec -T postgres pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; do
             if [ $SECONDS -gt $end ]; then
@@ -163,7 +178,7 @@ jobs:
       - name: Wait for Redis to be ready
         run: |
           echo "Waiting for Redis to be ready..."
-          max_wait=120
+          max_wait=180
           end=$((SECONDS + max_wait))
           until timeout 10 docker compose exec -T redis redis-cli ping | grep -q PONG; do
             if [ $SECONDS -gt $end ]; then
@@ -195,10 +210,15 @@ jobs:
           done
           echo "Migrations completed"
 
-      - name: Run Link Accessibility Test
+      - name: Install dev dependencies in php container
         run: |
-          echo "Running Link Accessibility Test..."
-          docker compose exec -T php php artisan test --filter LinkAccessibilityTest
+          echo "Installing dev dependencies in php container..."
+          docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run Link Accessibility Test (phpunit)
+        run: |
+          echo "Running Link Accessibility Test with phpunit..."
+          docker compose exec -T php ./vendor/bin/phpunit --filter LinkAccessibilityTest
 
 
       - name: Test application health (stable)
