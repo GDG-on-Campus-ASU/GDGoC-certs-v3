@@ -114,7 +114,7 @@ jobs:
       - name: Wait for containers to be healthy
         run: |
           echo "Waiting for containers to be healthy..."
-          max_wait=180
+          max_wait=300
           end=$((SECONDS + max_wait))
           while [ $SECONDS -le $end ]; do
             docker compose ps
@@ -160,7 +160,7 @@ jobs:
           echo "Waiting for PostgreSQL to be ready (pg_isready)..."
           DB_USER="${DB_USERNAME:-gdgoc_user}"
           DB_NAME="${DB_DATABASE:-gdgoc_certs}"
-          max_wait=180
+          max_wait=300
           end=$((SECONDS + max_wait))
           until timeout 10 docker compose exec -T postgres pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; do
             if [ $SECONDS -gt $end ]; then
@@ -178,7 +178,7 @@ jobs:
       - name: Wait for Redis to be ready
         run: |
           echo "Waiting for Redis to be ready..."
-          max_wait=120
+          max_wait=180
           end=$((SECONDS + max_wait))
           until timeout 10 docker compose exec -T redis redis-cli ping | grep -q PONG; do
             if [ $SECONDS -gt $end ]; then
