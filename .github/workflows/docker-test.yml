@@ -104,37 +104,45 @@ jobs:
           DOCKER_BUILDKIT=1 docker compose build --pull --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 php
           docker compose up -d --build postgres redis php
 
-      - name: Wait for containers to be running
+      - name: Wait for containers to be healthy
         run: |
-          echo "Waiting for containers to appear as Up..."
+          echo "Waiting for containers to be healthy..."
           max_wait=180
           end=$((SECONDS + max_wait))
           while [ $SECONDS -le $end ]; do
             docker compose ps
-            # Check if all required containers are running by checking their status individually
-            running_count=0
-            if docker compose ps postgres | grep -q "Up"; then running_count=$((running_count + 1)); fi
-            if docker compose ps redis | grep -q "Up"; then running_count=$((running_count + 1)); fi
-            if docker compose ps php | grep -q "Up"; then running_count=$((running_count + 1)); fi
+            # Check if all required containers are healthy by checking Docker health status
+            healthy_count=0
             
-            if [ "$running_count" -ge 3 ]; then
-              echo "All required containers are running"
+            # Check postgres health - look for "(healthy)" in the status
+            if docker compose ps postgres | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ Postgres is healthy"
+            fi
+            
+            # Check redis health - look for "(healthy)" in the status
+            if docker compose ps redis | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ Redis is healthy"
+            fi
+            
+            # Check php health - look for "(healthy)" in the status
+            if docker compose ps php | grep -q "(healthy)"; then 
+              healthy_count=$((healthy_count + 1))
+              echo "✓ PHP is healthy"
+            fi
+            
+            if [ "$healthy_count" -ge 3 ]; then
+              echo "All required containers are healthy"
               break
             fi
-            sleep 2
-            if [ "$running_count" -ge 3 ]; then
-              echo "All required containers are running"
-              break
-            fi
-            sleep 2
+            
+            echo "Waiting for services to be healthy ($healthy_count/3)..."
+            sleep 5
           done
           
-          # Wait for 4 minutes to ensure stability as requested
-          echo "Waiting for 4 minutes to ensure container stability..."
-          sleep 240
-          
           if [ $SECONDS -gt $end ]; then
-            echo "Timeout waiting for containers to be Up"
+            echo "Timeout waiting for containers to be healthy"
             docker compose ps
             docker compose logs --tail=200
             exit 1
