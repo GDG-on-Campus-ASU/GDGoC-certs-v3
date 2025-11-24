@@ -37,7 +37,7 @@ This section covers deploying the application on a traditional server without co
 - **Composer**: 2.0+
 - **Node.js**: 20.x LTS with npm
 - **Database**: PostgreSQL 14+
-- **Web Server**: Nginx (recommended) or Apache
+- **Web Server**: Apache with mod_php (recommended)
 - **Redis**: 6.0+ (optional, recommended for production)
 - **wkhtmltopdf**: Required for PDF certificate generation
 - **Git**: For cloning the repository
@@ -112,11 +112,12 @@ wkhtmltopdf --version
 
 > **Note**: The Ubuntu package version of wkhtmltopdf may have limited functionality (e.g., missing Qt patches for headers/footers). For advanced PDF features, consider downloading the patched version from the [official wkhtmltopdf releases](https://wkhtmltopdf.org/downloads.html).
 
-#### 8. Install Nginx
+#### 8. Install Apache
 
 ```bash
-sudo apt install -y nginx
-sudo systemctl enable nginx
+sudo apt install -y apache2 libapache2-mod-php8.3
+sudo a2enmod rewrite
+sudo systemctl enable apache2
 ```
 
 #### 9. Install Supervisor (for Queue Workers)
@@ -227,68 +228,7 @@ php artisan optimize
 
 ### Web Server Configuration
 
-#### Nginx Configuration
-
-Create a new Nginx site configuration:
-
-```bash
-sudo nano /etc/nginx/sites-available/gdgoc-certs
-```
-
-Add the following configuration:
-
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name certs.your-domain.com admin.certs.your-domain.com;
-    root /var/www/GDGoC-certs-v3/public;
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-
-    index index.php;
-
-    charset utf-8;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_hide_header X-Powered-By;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-```
-
-Enable the site and restart Nginx:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/gdgoc-certs /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-#### Apache Configuration (Alternative)
-
-If using Apache instead of Nginx:
-
-```bash
-sudo apt install -y apache2 libapache2-mod-php8.3
-sudo a2enmod rewrite
-```
+#### Apache Configuration
 
 Create a virtual host configuration:
 
@@ -314,9 +254,10 @@ Add the following:
 </VirtualHost>
 ```
 
-Enable the site:
+Enable the site and disable the default site:
 
 ```bash
+sudo a2dissite 000-default
 sudo a2ensite gdgoc-certs
 sudo systemctl reload apache2
 ```
@@ -375,13 +316,10 @@ sudo supervisorctl start gdgoc-queue-worker:*
 Use Certbot to obtain and configure SSL certificates:
 
 ```bash
-# Install Certbot
-sudo apt install -y certbot python3-certbot-nginx
+# Install Certbot for Apache
+sudo apt install -y certbot python3-certbot-apache
 
-# Obtain certificates (for Nginx)
-sudo certbot --nginx -d certs.your-domain.com -d admin.certs.your-domain.com
-
-# For Apache
+# Obtain certificates
 sudo certbot --apache -d certs.your-domain.com -d admin.certs.your-domain.com
 ```
 
