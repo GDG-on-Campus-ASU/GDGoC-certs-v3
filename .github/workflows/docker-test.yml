@@ -64,9 +64,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Fix workspace ownership
-        run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+        run: |
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+          sudo chmod -R u+w $GITHUB_WORKSPACE/.git
 
       - name: Configure Kernel for Redis
         run: sudo sysctl -w vm.overcommit_memory=1
@@ -85,6 +89,9 @@ jobs:
           echo "DB_DATABASE=gdgoc_certs" >> .env
           echo "DB_USERNAME=gdgoc_user" >> .env
           echo "DB_PASSWORD=secret" >> .env
+          echo "POSTGRES_DB=gdgoc_certs" >> .env
+          echo "POSTGRES_USER=gdgoc_user" >> .env
+          echo "POSTGRES_PASSWORD=secret" >> .env
           echo "REDIS_HOST=redis" >> .env
           echo "REDIS_PORT=6379" >> .env
           echo "APP_PORT=8000" >> .env
