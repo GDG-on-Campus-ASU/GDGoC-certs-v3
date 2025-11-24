@@ -32,11 +32,11 @@ This section covers deploying the application on a traditional server without co
 - **PHP**: 8.2 or higher with the following extensions:
   - `php-cli`, `php-fpm`, `php-mbstring`, `php-xml`, `php-curl`
   - `php-zip`, `php-bcmath`, `php-gd`, `php-intl`
-  - `php-pgsql` (for PostgreSQL) or `php-mysql` (for MySQL)
+  - `php-pgsql` (for PostgreSQL)
   - `php-redis` (optional, for Redis cache/queue)
 - **Composer**: 2.0+
 - **Node.js**: 20.x LTS with npm
-- **Database**: PostgreSQL 14+ (recommended) or MySQL 8.0+
+- **Database**: PostgreSQL 14+
 - **Web Server**: Nginx (recommended) or Apache
 - **Redis**: 6.0+ (optional, recommended for production)
 - **wkhtmltopdf**: Required for PDF certificate generation
@@ -79,9 +79,7 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
-#### 5. Install PostgreSQL (or MySQL)
-
-**PostgreSQL (Recommended):**
+#### 5. Install PostgreSQL
 
 ```bash
 sudo apt install -y postgresql postgresql-contrib
@@ -92,24 +90,6 @@ sudo -u postgres psql <<EOF
 CREATE USER gdgoc_user WITH PASSWORD 'your_secure_password';
 CREATE DATABASE gdgoc_certs OWNER gdgoc_user;
 GRANT ALL PRIVILEGES ON DATABASE gdgoc_certs TO gdgoc_user;
-EOF
-```
-
-**MySQL (Alternative):**
-
-```bash
-sudo apt install -y mysql-server
-
-# Secure installation
-sudo mysql_secure_installation
-
-# Create database and user
-# ⚠️ IMPORTANT: Replace 'your_secure_password' with a strong, unique password!
-sudo mysql <<EOF
-CREATE DATABASE gdgoc_certs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gdgoc_user'@'localhost' IDENTIFIED BY 'your_secure_password';
-GRANT ALL PRIVILEGES ON gdgoc_certs.* TO 'gdgoc_user'@'localhost';
-FLUSH PRIVILEGES;
 EOF
 ```
 
@@ -482,9 +462,8 @@ The application consists of the following services:
 2. **Queue Worker** (`queue-worker`) - Processes background jobs
 3. **Scheduler** (`scheduler`) - Runs scheduled Laravel tasks
 4. **NGINX** (`nginx`) - Internal web server for PHP-FPM routing
-5. **PostgreSQL** (`postgres`) - Primary database (default)
-6. **MySQL** (`mysql`) - Alternative database option
-7. **Redis** (`redis`) - Cache and queue storage
+5. **PostgreSQL** (`postgres`) - Database
+6. **Redis** (`redis`) - Cache and queue storage
 
 ## Local Development Setup
 
@@ -835,29 +814,6 @@ docker compose exec postgres pg_dump -U gdgoc_user gdgoc_certs > backup.sql
 
 # Restore database
 cat backup.sql | docker compose exec -T postgres psql -U gdgoc_user gdgoc_certs
-```
-
-### MySQL (Alternative)
-
-To use MySQL instead of PostgreSQL, update `.env`:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-```
-
-Then:
-
-```bash
-# Access MySQL shell
-docker compose exec mysql mysql -u gdgoc_user -p gdgoc_certs
-
-# Backup database
-docker compose exec mysql mysqldump -u gdgoc_user -p gdgoc_certs > backup.sql
-
-# Restore database
-cat backup.sql | docker compose exec -T mysql mysql -u gdgoc_user -p gdgoc_certs
 ```
 
 ## Troubleshooting
