@@ -210,10 +210,15 @@ jobs:
           done
           echo "Migrations completed"
 
-      - name: Run Link Accessibility Test
+      - name: Install dev dependencies in php container
         run: |
-          echo "Running Link Accessibility Test..."
-          docker compose exec -T php php artisan test --filter LinkAccessibilityTest
+          echo "Installing dev dependencies in php container..."
+          docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run Link Accessibility Test (phpunit)
+        run: |
+          echo "Running Link Accessibility Test with phpunit..."
+          docker compose exec -T php ./vendor/bin/phpunit --filter LinkAccessibilityTest
 
 
       - name: Test application health (stable)
