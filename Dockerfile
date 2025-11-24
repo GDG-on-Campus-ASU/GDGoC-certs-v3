@@ -38,15 +38,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions including Redis, BCMath, PDO MySQL
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_pgsql \
-    pgsql \
-    gd \
-    zip \
-    opcache \
-    bcmath
+# Install PHP extensions including Redis, BCMath, PDO MySQL
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install -j$(nproc) pdo pdo_pgsql pgsql
+RUN docker-php-ext-install -j$(nproc) gd zip opcache bcmath
 
 # Install Redis extension with retry logic and fallback
 RUN set -eux; \

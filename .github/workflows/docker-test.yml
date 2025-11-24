@@ -82,7 +82,7 @@ jobs:
           else
             touch .env
           fi
-          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+          echo "APP_KEY=base64:2fl+Ktvkfl+Fuz4Qp/yWcihukHot4hDOqmjD++L3xVs=" >> .env
           echo "DB_CONNECTION=pgsql" >> .env
           echo "DB_HOST=postgres" >> .env
           echo "DB_PORT=5432" >> .env
