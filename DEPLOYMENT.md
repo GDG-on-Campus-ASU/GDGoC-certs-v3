@@ -128,34 +128,28 @@ sudo systemctl enable supervisor
 
 ### Application Installation
 
-#### 1. Create Application Directory
+#### 1. Clone the Repository
 
 ```bash
-sudo mkdir -p /var/www/gdgoc-certs
-sudo chown $USER:$USER /var/www/gdgoc-certs
+cd /var/www
+sudo git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git
+cd GDGoC-certs-v3
 ```
 
-#### 2. Clone the Repository
-
-```bash
-cd /var/www/gdgoc-certs
-git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git .
-```
-
-#### 3. Install PHP Dependencies
+#### 2. Install PHP Dependencies
 
 ```bash
 composer install --optimize-autoloader --no-dev
 ```
 
-#### 4. Install Node.js Dependencies and Build Assets
+#### 3. Install Node.js Dependencies and Build Assets
 
 ```bash
 npm ci
 npm run build
 ```
 
-#### 5. Configure Environment
+#### 4. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -195,34 +189,34 @@ VALIDATION_DOMAIN=certs.your-domain.com
 # SNAPPY_PDF_BINARY=/usr/bin/wkhtmltopdf
 ```
 
-#### 6. Generate Application Key
+#### 5. Generate Application Key
 
 ```bash
 php artisan key:generate
 ```
 
-#### 7. Set Directory Permissions
+#### 6. Set Directory Permissions
 
 ```bash
-sudo chown -R www-data:www-data /var/www/gdgoc-certs
-sudo chmod -R 755 /var/www/gdgoc-certs
-sudo chmod -R 775 /var/www/gdgoc-certs/storage
-sudo chmod -R 775 /var/www/gdgoc-certs/bootstrap/cache
+sudo chown -R www-data:www-data /var/www/GDGoC-certs-v3
+sudo chmod -R 755 /var/www/GDGoC-certs-v3
+sudo chmod -R 775 /var/www/GDGoC-certs-v3/storage
+sudo chmod -R 775 /var/www/GDGoC-certs-v3/bootstrap/cache
 ```
 
-#### 8. Run Database Migrations
+#### 7. Run Database Migrations
 
 ```bash
 php artisan migrate --force
 ```
 
-#### 9. Seed the Database (Optional)
+#### 8. Seed the Database (Optional)
 
 ```bash
 php artisan db:seed
 ```
 
-#### 10. Optimize for Production
+#### 9. Optimize for Production
 
 ```bash
 php artisan config:cache
@@ -248,7 +242,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name certs.your-domain.com admin.certs.your-domain.com;
-    root /var/www/gdgoc-certs/public;
+    root /var/www/GDGoC-certs-v3/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
@@ -308,9 +302,9 @@ Add the following:
 <VirtualHost *:80>
     ServerName certs.your-domain.com
     ServerAlias admin.certs.your-domain.com
-    DocumentRoot /var/www/gdgoc-certs/public
+    DocumentRoot /var/www/GDGoC-certs-v3/public
 
-    <Directory /var/www/gdgoc-certs/public>
+    <Directory /var/www/GDGoC-certs-v3/public>
         AllowOverride All
         Require all granted
     </Directory>
@@ -342,7 +336,7 @@ Add the following:
 ```ini
 [program:gdgoc-queue-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/gdgoc-certs/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+command=php /var/www/GDGoC-certs-v3/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -350,7 +344,7 @@ killasgroup=true
 user=www-data
 numprocs=2
 redirect_stderr=true
-stdout_logfile=/var/www/gdgoc-certs/storage/logs/queue-worker.log
+stdout_logfile=/var/www/GDGoC-certs-v3/storage/logs/queue-worker.log
 stopwaitsecs=3600
 ```
 
@@ -365,7 +359,7 @@ sudo crontab -e -u www-data
 Add the following line:
 
 ```cron
-* * * * * cd /var/www/gdgoc-certs && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/GDGoC-certs-v3 && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 #### Start Supervisor Processes
@@ -412,16 +406,16 @@ php artisan migrate --force
 sudo supervisorctl restart gdgoc-queue-worker:*
 
 # View Laravel logs
-tail -f /var/www/gdgoc-certs/storage/logs/laravel.log
+tail -f /var/www/GDGoC-certs-v3/storage/logs/laravel.log
 
 # View queue worker logs
-tail -f /var/www/gdgoc-certs/storage/logs/queue-worker.log
+tail -f /var/www/GDGoC-certs-v3/storage/logs/queue-worker.log
 ```
 
 ### Updating the Application (Non-Docker)
 
 ```bash
-cd /var/www/gdgoc-certs
+cd /var/www/GDGoC-certs-v3
 
 # Pull latest changes
 git pull origin main
@@ -558,12 +552,10 @@ docker compose exec php php artisan db:seed
 On your production server:
 
 ```bash
-# Create application directory
-mkdir -p /var/www/gdgoc-certs
-cd /var/www/gdgoc-certs
-
 # Clone the repository
-git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git .
+cd /var/www
+git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git
+cd GDGoC-certs-v3
 git checkout main
 ```
 
@@ -684,7 +676,7 @@ Configure the following secrets in your GitHub repository (Settings > Secrets an
 - `PRODUCTION_USER`: SSH username
 - `SSH_PRIVATE_KEY`: Private SSH key for authentication
 - `SSH_PORT`: SSH port (optional, defaults to 22)
-- `PRODUCTION_PATH`: Path to application directory (e.g., `/var/www/gdgoc-certs`)
+- `PRODUCTION_PATH`: Path to application directory (e.g., `/var/www/GDGoC-certs-v3`)
 
 ### Deployment Workflow
 
@@ -748,7 +740,7 @@ To deploy manually:
 
 ```bash
 # On production server
-cd /var/www/gdgoc-certs
+cd /var/www/GDGoC-certs-v3
 git pull origin main
 docker compose pull
 docker compose up -d --remove-orphans
