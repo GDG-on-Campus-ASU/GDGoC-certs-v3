@@ -564,6 +564,12 @@ docker compose logs scheduler
 
 # Test application
 curl http://localhost:8000
+
+# Test Admin Dashboard (requires login, but check if reachable)
+# The dashboard is at /admin/dashboard, but redirects to login if not authenticated.
+# You can verify the login page is accessible:
+curl -I http://localhost:8000/login
+
 ```
 
 ## NGINX Proxy Manager Configuration
@@ -624,13 +630,22 @@ The CI/CD pipeline consists of two main workflows:
 
 Runs automatically on **every Pull Request** to test Docker deployment:
 
-1. **Docker Build Test**: Verifies the Dockerfile builds successfully
-2. **Docker Compose Test**: 
+1. **Environment Setup**:
+   - Fixes workspace ownership
+   - Configures kernel for Redis (`vm.overcommit_memory=1`)
+   - Pre-creates storage and cache directories on the host with 777 permissions to prevent mounting issues
+2. **Docker Build Test**: Verifies the Dockerfile builds successfully
+3. **Docker Compose Test**: 
    - Starts all services (PostgreSQL, Redis, PHP, Nginx)
-   - Waits for services to be healthy
-   - Runs database migrations
-   - Tests application health endpoint
-3. **Security Scan**: Scans Docker image for vulnerabilities using Trivy
+   - **Health Checks**:
+     - Waits for Docker container healthchecks
+     - Explicitly waits for PostgreSQL to be ready (`pg_isready`)
+     - Explicitly waits for Redis to be ready (`redis-cli ping`)
+   - **Application Setup**:
+     - Installs development dependencies (`composer install`)
+     - Runs database migrations
+   - **Link Accessibility Test**: Verifies that critical routes (/, /login, /register, /admin/dashboard) are accessible and return expected status codes (200 or 302). This ensures no 500 errors are present on key pages.
+4. **Security Scan**: Scans Docker image for vulnerabilities using Trivy
 
 This ensures that Docker deployments work correctly before merging to main.
 
@@ -843,8 +858,29 @@ docker compose restart queue-worker
 Verify database service is healthy:
 ```bash
 docker compose ps postgres
+docker compose ps postgres
 docker compose logs postgres
 ```
+
+### Admin Dashboard 500 Error
+
+If you encounter a 500 error when accessing `/admin/dashboard`:
+
+1. **Check Database Seeder**: Ensure the `DatabaseSeeder` has run and the superadmin user exists.
+   ```bash
+   docker compose exec php php artisan db:seed
+   ```
+2. **Verify Superuser Role**: The user must have the `superadmin` role.
+   ```bash
+   docker compose exec php php artisan tinker
+   >>> \App\Models\User::where('email', 'admin@example.com')->first()->role
+   ```
+   It should output `"superadmin"`.
+3. **Check Logs**:
+   ```bash
+   docker compose logs php
+   ```
+
 
 ### Clear Cache
 
