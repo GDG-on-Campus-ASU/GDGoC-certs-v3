@@ -53,6 +53,13 @@ class LinkAccessibilityTest extends TestCase
         foreach ($urls as $url) {
             $response = $this->actingAs($this->user)->get($url);
 
+            // Debug: Dump content on failure to see the actual error in CI logs
+            if ($response->status() !== 200) {
+                echo "\nFailed URL: " . $url . "\n";
+                echo "Status Code: " . $response->status() . "\n";
+                echo "Response Content:\n" . substr($response->getContent(), 0, 2000) . "\n"; // Limit output
+            }
+
             // Check for 200 OK. 
             // Note: Some pages might redirect if not properly set up, but for a superadmin 
             // on index pages, we generally expect 200. 

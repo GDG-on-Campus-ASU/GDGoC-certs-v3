@@ -19,6 +19,12 @@ FROM php:8.3-apache-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg2 \
+    lsb-release \
+    ca-certificates \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     libpng-dev \
     libjpeg-dev \
@@ -32,15 +38,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions including Redis, BCMath, PDO MySQL
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_pgsql \
-    pgsql \
-    gd \
-    zip \
-    opcache \
-    bcmath
+# Install PHP extensions including Redis, BCMath, PDO MySQL
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install -j$(nproc) pdo pdo_pgsql pgsql
+RUN docker-php-ext-install -j$(nproc) gd zip opcache bcmath
 
 # Install Redis extension with retry logic and fallback
 RUN set -eux; \

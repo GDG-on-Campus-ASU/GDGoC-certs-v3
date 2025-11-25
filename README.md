@@ -16,7 +16,7 @@ A secure, multi-tenant certificate generation platform built with Laravel 11, Po
 
 - **Backend**: Laravel 11
 - **Frontend**: Blade + Tailwind CSS
-- **Database**: PostgreSQL 16
+- **Database**: PostgreSQL 18
 - **Containerization**: Docker + Docker Compose
 - **Web Server**: Nginx
 - **PHP**: 8.3
