@@ -172,7 +172,39 @@ OIDC_TOKEN_ENDPOINT=https://your-idp.com/token
 OIDC_USERINFO_ENDPOINT=https://your-idp.com/userinfo
 ```
 
-### 4. Deploy with Docker Compose
+### 4. External Storage Configuration (Optional)
+
+To store certificates on external storage (AWS S3, Azure Blob Storage, or Google Drive), configure the following environment variables in your `.env` file.
+
+#### AWS S3
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=your-bucket-name
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+#### Azure Blob Storage
+```env
+FILESYSTEM_DISK=azure
+AZURE_STORAGE_NAME=your-storage-account-name
+AZURE_STORAGE_KEY=your-storage-account-key
+AZURE_STORAGE_CONTAINER=your-container-name
+AZURE_STORAGE_URL=https://your-storage-account-name.blob.core.windows.net
+```
+
+#### Google Drive
+```env
+FILESYSTEM_DISK=google
+GOOGLE_DRIVE_CLIENT_ID=your-client-id
+GOOGLE_DRIVE_CLIENT_SECRET=your-client-secret
+GOOGLE_DRIVE_REFRESH_TOKEN=your-refresh-token
+GOOGLE_DRIVE_FOLDER=your-folder-id
+```
+
+### 5. Deploy with Docker Compose
 
 ```bash
 # Build and start services
@@ -187,7 +219,7 @@ docker compose exec php php artisan view:cache
 docker compose exec php php artisan optimize
 ```
 
-### 5. Verify Deployment
+### 6. Verify Deployment
 
 ```bash
 # Check all services are running

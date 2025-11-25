@@ -60,6 +60,27 @@ return [
             'report' => false,
         ],
 
+        'azure' => [
+            'driver' => 'azure',
+            'name' => env('AZURE_STORAGE_NAME'),
+            'key' => env('AZURE_STORAGE_KEY'),
+            'container' => env('AZURE_STORAGE_CONTAINER'),
+            'url' => env('AZURE_STORAGE_URL'),
+            'endpoint' => env('AZURE_STORAGE_ENDPOINT'),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'google' => [
+            'driver' => 'google',
+            'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
+            'clientSecret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+            'refreshToken' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+            'folder' => env('GOOGLE_DRIVE_FOLDER'),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

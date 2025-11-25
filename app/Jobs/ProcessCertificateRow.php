@@ -65,6 +65,11 @@ class ProcessCertificateRow implements ShouldQueue
         // Generate PDF
         $pdfData = $certificateService->generate($certificate);
 
+        // Store PDF
+        $path = 'certificates/' . $certificate->unique_id . '.pdf';
+        \Illuminate\Support\Facades\Storage::put($path, $pdfData);
+        $certificate->update(['file_path' => $path]);
+
         // Configure Mailer - check for user's SMTP setting
         $mailerName = 'smtp'; // default mailer
 
