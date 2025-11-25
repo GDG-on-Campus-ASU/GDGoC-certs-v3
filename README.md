@@ -62,6 +62,13 @@ A secure, multi-tenant certificate generation platform built with Laravel 11, Po
 ### Docker Setup
 
 > **📘 For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+>
+> The deployment guide includes detailed instructions for:
+> - Production server setup
+> - NGINX Proxy Manager configuration (SSL/TLS)
+> - CI/CD pipeline details
+> - Troubleshooting common issues
+
 
 This project includes a complete Docker setup with:
 - Multi-stage Dockerfile for optimized production images
@@ -233,6 +240,8 @@ GitHub Actions workflows are configured for:
 - Sets up PHP 8.2, 8.3, and 8.4
 - Builds assets with Node.js 20
 - Runs migrations and tests
+- **Link Accessibility Test**: Verifies that critical routes (/, /login, /register, /admin/dashboard) are accessible and return expected status codes (200 or 302).
+
 
 ### Deployment (`.github/workflows/deploy.yml`)
 - Triggers on push to `main` branch

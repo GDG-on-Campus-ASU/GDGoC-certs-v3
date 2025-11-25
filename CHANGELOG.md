@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/laravel/compare/v11.6.0...11.x)
+## [Unreleased]
+- **Fixed**: 500 error on Admin Dashboard by ensuring `DatabaseSeeder` correctly assigns the `superadmin` role.
+- **Fixed**: Docker deployment timeout issues by optimizing healthchecks and resource limits.
+- **Added**: `LinkAccessibilityTest` to CI/CD pipeline to automatically verify critical routes (/, /login, /register, /admin/dashboard).
+- **Improved**: Docker healthchecks and permission handling for smoother deployments.
+- **Updated**: Documentation (`DEPLOYMENT.md`, `README.md`) with comprehensive troubleshooting and deployment steps.
+
+## [v11.6.0](https://github.com/laravel/laravel/compare/v11.6.0...11.x)
+
 
 ## [v11.6.0](https://github.com/laravel/laravel/compare/v11.5.1...v11.6.0) - 2025-01-21
 
