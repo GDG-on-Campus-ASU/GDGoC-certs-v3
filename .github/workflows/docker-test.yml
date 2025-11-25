@@ -105,6 +105,11 @@ jobs:
           chmod -R 777 storage bootstrap/cache
           echo "Directories prepared successfully"
 
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+
       - name: Build and start Docker Compose services
         run: |
           # Build php image with host network to avoid DNS issues with PECL

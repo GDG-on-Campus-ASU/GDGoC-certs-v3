@@ -80,7 +80,6 @@ Route::domain(config('app.domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.d
             ->name('admin.')
             ->group(function () {
                 Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-                Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
                 // User Management
                 Route::resource('users', AdminUserController::class)->except(['show']);
