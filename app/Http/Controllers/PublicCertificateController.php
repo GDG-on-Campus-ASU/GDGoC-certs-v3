@@ -47,6 +47,13 @@ class PublicCertificateController extends Controller
             ->where('status', 'issued')
             ->firstOrFail();
 
+        if ($certificate->file_path && \Illuminate\Support\Facades\Storage::exists($certificate->file_path)) {
+            $content = \Illuminate\Support\Facades\Storage::get($certificate->file_path);
+            return response($content)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="certificate.pdf"');
+        }
+
         $pdfData = $certificateService->generate($certificate);
 
         return response($pdfData)

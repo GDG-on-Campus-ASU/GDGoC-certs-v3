@@ -195,6 +195,11 @@ jobs:
           done
           echo "Redis is ready"
 
+      - name: Install dev dependencies in php container
+        run: |
+          echo "Installing dev dependencies in php container..."
+          docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Run database migrations (with retries)
         run: |
           echo "Running database migrations..."
@@ -214,11 +219,6 @@ jobs:
             sleep 5
           done
           echo "Migrations completed"
-
-      - name: Install dev dependencies in php container
-        run: |
-          echo "Installing dev dependencies in php container..."
-          docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Run Link Accessibility Test (phpunit)
         run: |

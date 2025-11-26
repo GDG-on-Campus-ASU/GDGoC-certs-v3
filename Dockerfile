@@ -37,8 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions including Redis, BCMath, PDO MySQL
-# Install PHP extensions including Redis, BCMath, PDO MySQL
+# Install PHP extensions including Redis, BCMath
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install -j$(nproc) pdo pdo_pgsql pgsql
 RUN docker-php-ext-install -j$(nproc) gd zip opcache bcmath

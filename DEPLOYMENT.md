@@ -536,7 +536,119 @@ OIDC_TOKEN_ENDPOINT=https://your-idp.com/token
 OIDC_USERINFO_ENDPOINT=https://your-idp.com/userinfo
 ```
 
-### 4. Deploy with Docker Compose
+### 4. External Storage Configuration (Optional)
+
+To store certificates on external storage (AWS S3, Azure Blob Storage, or Google Drive), configure the following environment variables in your `.env` file.
+
+#### AWS S3
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=your-bucket-name
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+#### Azure Blob Storage
+```env
+FILESYSTEM_DISK=azure
+AZURE_STORAGE_NAME=your-storage-account-name
+AZURE_STORAGE_KEY=your-storage-account-key
+AZURE_STORAGE_CONTAINER=your-container-name
+AZURE_STORAGE_URL=https://your-storage-account-name.blob.core.windows.net
+```
+
+#### Google Drive
+```env
+FILESYSTEM_DISK=google
+GOOGLE_DRIVE_CLIENT_ID=your-client-id
+GOOGLE_DRIVE_CLIENT_SECRET=your-client-secret
+GOOGLE_DRIVE_REFRESH_TOKEN=your-refresh-token
+GOOGLE_DRIVE_FOLDER=your-folder-id
+```
+
+### 5. Obtaining Storage Credentials
+
+Here is how to obtain the necessary configuration values for each storage provider.
+
+#### AWS S3
+
+1.  **Create an IAM User**:
+    *   Log in to the [AWS Console](https://console.aws.amazon.com/).
+    *   Go to **IAM** > **Users** > **Create user**.
+    *   Name the user (e.g., `gdgoc-certs-user`).
+    *   Attach policies directly: Search for and select `AmazonS3FullAccess` (or create a custom policy for specific bucket access).
+    *   Create the user.
+2.  **Generate Access Keys**:
+    *   Click on the newly created user.
+    *   Go to the **Security credentials** tab.
+    *   Scroll to **Access keys** and click **Create access key**.
+    *   Select **Application running outside AWS**.
+    *   Copy the **Access key ID** (`AWS_ACCESS_KEY_ID`) and **Secret access key** (`AWS_SECRET_ACCESS_KEY`).
+3.  **Create a Bucket**:
+    *   Go to **S3** > **Create bucket**.
+    *   Enter a **Bucket name** (`AWS_BUCKET`).
+    *   Select an **AWS Region** (`AWS_DEFAULT_REGION`).
+    *   Keep other settings as default or adjust as needed.
+
+#### Azure Blob Storage
+
+1.  **Create a Storage Account**:
+    *   Log in to the [Azure Portal](https://portal.azure.com/).
+    *   Search for **Storage accounts** and click **Create**.
+    *   Select your Subscription and Resource Group.
+    *   Enter a **Storage account name** (`AZURE_STORAGE_NAME`).
+    *   Select Region and Performance/Redundancy options.
+    *   Review and Create.
+2.  **Get Access Keys**:
+    *   Go to your new Storage Account resource.
+    *   In the left menu, under **Security + networking**, click **Access keys**.
+    *   Copy **Key 1** (or Key 2) -> This is your `AZURE_STORAGE_KEY`.
+3.  **Create a Container**:
+    *   In the left menu, under **Data storage**, click **Containers**.
+    *   Click **+ Container**.
+    *   Enter a **Name** (`AZURE_STORAGE_CONTAINER`).
+    *   Set Public access level (usually "Private" for internal use, or "Blob" if files need to be public).
+
+#### Google Drive
+
+1.  **Create a Project & Enable API**:
+    *   Go to the [Google Cloud Console](https://console.cloud.google.com/).
+    *   Create a new project.
+    *   Go to **APIs & Services** > **Library**.
+    *   Search for **Google Drive API** and enable it.
+2.  **Configure OAuth Consent Screen**:
+    *   Go to **APIs & Services** > **OAuth consent screen**.
+    *   Select **External** (unless you are in a Google Workspace organization).
+    *   Fill in the App Name and User Support Email.
+    *   Add `../auth/drive.file` to **Scopes**.
+    *   Add your email to **Test users**.
+3.  **Create Credentials**:
+    *   Go to **APIs & Services** > **Credentials**.
+    *   Click **Create Credentials** > **OAuth client ID**.
+    *   Application type: **Web application**.
+    *   Name: `GDGoC Certs Drive`.
+    *   **Authorized redirect URIs**: Add `https://developers.google.com/oauthplayground` (we will use this to generate the refresh token).
+    *   Click **Create**.
+    *   Copy the **Client ID** (`GOOGLE_DRIVE_CLIENT_ID`) and **Client Secret** (`GOOGLE_DRIVE_CLIENT_SECRET`).
+4.  **Generate Refresh Token**:
+    *   Go to the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground).
+    *   Click the **Settings** (gear icon) in the top right.
+    *   Check **Use your own OAuth credentials**.
+    *   Enter your **Client ID** and **Client Secret**.
+    *   In the left panel "Step 1", scroll to **Drive API v3** and select `https://www.googleapis.com/auth/drive.file`.
+    *   Click **Authorize APIs**.
+    *   Login with your Google account and allow access.
+    *   In "Step 2", click **Exchange authorization code for tokens**.
+    *   Copy the **Refresh Token** (`GOOGLE_DRIVE_REFRESH_TOKEN`).
+5.  **Get Folder ID**:
+    *   Go to Google Drive and open (or create) the folder you want to use.
+    *   Look at the URL: `https://drive.google.com/drive/folders/YOUR_FOLDER_ID_IS_HERE`.
+    *   Copy that ID string (`GOOGLE_DRIVE_FOLDER`).
+    *   **Important**: Share this folder with the email address associated with the project (or ensure the account generating the token has edit access).
+
+### 6. Deploy with Docker Compose
 
 ```bash
 # Build and start services
@@ -551,7 +663,7 @@ docker compose exec php php artisan view:cache
 docker compose exec php php artisan optimize
 ```
 
-### 5. Verify Deployment
+### 7. Verify Deployment
 
 ```bash
 # Check all services are running

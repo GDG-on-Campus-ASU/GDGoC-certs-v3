@@ -26,6 +26,7 @@ class Certificate extends Model
         'status',
         'revoked_at',
         'revocation_reason',
+        'file_path',
     ];
 
     protected $casts = [

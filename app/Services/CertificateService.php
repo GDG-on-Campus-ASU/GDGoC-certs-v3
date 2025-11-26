@@ -45,4 +45,17 @@ class CertificateService
         // Return the PDF binary
         return $pdf->output();
     }
+
+    /**
+     * Generate and store the certificate PDF.
+     */
+    public function store(Certificate $certificate): string
+    {
+        $pdfContent = $this->generate($certificate);
+        $filename = 'certificates/' . $certificate->unique_id . '.pdf';
+        
+        \Illuminate\Support\Facades\Storage::put($filename, $pdfContent);
+        
+        return $filename;
+    }
 }

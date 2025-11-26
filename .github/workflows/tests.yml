@@ -23,6 +23,21 @@ jobs:
 
     name: PHP ${{ matrix.php }}
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: gdgoc_certs_test
+          POSTGRES_USER: gdgoc_user
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,7 +46,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_pgsql, pgsql
           coverage: none
 
       - name: Setup Node.js
@@ -42,6 +57,9 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check Composer Autoload
+        run: test -f vendor/autoload.php
 
       - name: Install NPM dependencies
         run: npm ci
@@ -55,11 +73,22 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
-      - name: Create SQLite database
-        run: touch database/database.sqlite
-
       - name: Run migrations
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: gdgoc_certs_test
+          DB_USERNAME: gdgoc_user
+          DB_PASSWORD: secret
         run: php artisan migrate --force
 
       - name: Execute tests
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: gdgoc_certs_test
+          DB_USERNAME: gdgoc_user
+          DB_PASSWORD: secret
         run: php artisan test
