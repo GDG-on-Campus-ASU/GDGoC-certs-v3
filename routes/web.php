@@ -21,7 +21,7 @@ use App\Http\Middleware\EnsureUserIsSuperadmin;
 use Illuminate\Support\Facades\Route;
 
 // Public validation page (certs.gdg-oncampus.dev)
-Route::domain(config('app.domains.public', 'certs.gdg-oncampus.dev'))
+Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
     ->group(function () {
         Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index');
         Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
@@ -30,7 +30,7 @@ Route::domain(config('app.domains.public', 'certs.gdg-oncampus.dev'))
     });
 
 // Admin dashboard (sudo.certs-admin.certs.gdg-oncampus.dev)
-Route::domain(config('app.domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev'))
+Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev'))
     ->middleware(['auth'])
     ->group(function () {
         // OAuth / OIDC Routes
@@ -107,7 +107,7 @@ Route::domain(config('app.domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.d
     });
 
 // Add a root route for the admin domain to redirect to login
-Route::domain(config('app.domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev'))
+Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev'))
     ->group(function () {
         Route::get('/', function () {
             return redirect()->route('login');
@@ -192,7 +192,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 });
 
 // Public Certificate Validation Routes - Domain-based (keep for backwards compatibility)
-Route::domain(config('app.domains.validation'))->group(function () {
+Route::domain(config('domains.validation'))->group(function () {
     Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index.legacy');
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.legacy');
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.legacy');

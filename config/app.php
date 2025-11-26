@@ -123,21 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Domains Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure the domains used by the application for different purposes.
-    | The validation domain is used for public certificate validation.
-    | The admin domain is used for the admin dashboard and leader portal.
-    |
-    */
 
-    'domains' => [
-        'validation' => env('VALIDATION_DOMAIN', 'certs.gdg-oncampus.dev'),
-        'public' => env('DOMAIN_PUBLIC', 'certs.gdg-oncampus.dev'),
-        'admin' => env('DOMAIN_ADMIN', 'sudo.certs-admin.certs.gdg-oncampus.dev'),
-    ],
 
 ];
