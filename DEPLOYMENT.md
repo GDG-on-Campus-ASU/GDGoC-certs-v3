@@ -1,18 +1,385 @@
-# GDGoC Certificates - Docker Deployment Guide
+# GDGoC Certificates - Deployment Guide
 
-This document provides instructions for deploying the GDGoC Certificate Generation Platform using Docker and Docker Compose.
+This document provides instructions for deploying the GDGoC Certificate Generation Platform. You can choose between Docker-based deployment (recommended) or traditional deployment without Docker.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Architecture Overview](#architecture-overview)
-- [Local Development Setup](#local-development-setup)
-- [Production Deployment](#production-deployment)
+- [Deployment Without Docker](#deployment-without-docker)
+  - [Prerequisites (Non-Docker)](#prerequisites-non-docker)
+  - [Server Setup](#server-setup)
+  - [Application Installation](#application-installation)
+  - [Web Server Configuration](#web-server-configuration)
+  - [Process Management](#process-management)
+  - [SSL/TLS Configuration](#ssltls-configuration)
+- [Docker Deployment](#docker-deployment)
+  - [Prerequisites (Docker)](#prerequisites-docker)
+  - [Architecture Overview](#architecture-overview)
+  - [Local Development Setup](#local-development-setup)
+  - [Production Deployment](#production-deployment)
 - [NGINX Proxy Manager Configuration](#nginx-proxy-manager-configuration)
 - [CI/CD Setup](#cicd-setup)
 - [Troubleshooting](#troubleshooting)
 
-## Prerequisites
+---
+
+## Deployment Without Docker
+
+This section covers deploying the application on a traditional server without containerization.
+
+### Prerequisites (Non-Docker)
+
+- **Operating System**: Ubuntu 22.04 LTS (or similar Linux distribution)
+- **PHP**: 8.2 or higher with the following extensions:
+  - `php-cli`, `php-fpm`, `php-mbstring`, `php-xml`, `php-curl`
+  - `php-zip`, `php-bcmath`, `php-gd`, `php-intl`
+  - `php-pgsql` (for PostgreSQL)
+  - `php-redis` (optional, for Redis cache/queue)
+- **Composer**: 2.0+
+- **Node.js**: 20.x LTS with npm
+- **Database**: PostgreSQL 14+
+- **Web Server**: Apache with mod_php (recommended)
+- **Redis**: 6.0+ (optional, recommended for production)
+- **wkhtmltopdf**: Required for PDF certificate generation
+- **Git**: For cloning the repository
+- **Supervisor**: For managing queue workers and scheduler
+
+### Server Setup
+
+#### 1. Update System Packages
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+#### 2. Install PHP and Required Extensions
+
+```bash
+# Add PHP repository
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+
+# Install PHP 8.3 and extensions (PHP 8.2+ is supported, but 8.3 is recommended)
+sudo apt install -y php8.3-fpm php8.3-cli php8.3-mbstring php8.3-xml \
+    php8.3-curl php8.3-zip php8.3-bcmath php8.3-gd php8.3-intl \
+    php8.3-pgsql php8.3-redis
+```
+
+#### 3. Install Composer
+
+```bash
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+#### 4. Install Node.js
+
+```bash
+# Using NodeSource repository
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+#### 5. Install PostgreSQL
+
+```bash
+sudo apt install -y postgresql postgresql-contrib
+
+# Create database and user
+# ⚠️ IMPORTANT: Replace 'your_secure_password' with a strong, unique password!
+sudo -u postgres psql <<EOF
+CREATE USER gdgoc_user WITH PASSWORD 'your_secure_password';
+CREATE DATABASE gdgoc_certs OWNER gdgoc_user;
+GRANT ALL PRIVILEGES ON DATABASE gdgoc_certs TO gdgoc_user;
+EOF
+```
+
+#### 6. Install Redis (Recommended for Production)
+
+```bash
+sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+#### 7. Install wkhtmltopdf (for PDF Generation)
+
+```bash
+sudo apt install -y wkhtmltopdf
+
+# Verify installation
+wkhtmltopdf --version
+```
+
+> **Note**: The Ubuntu package version of wkhtmltopdf may have limited functionality (e.g., missing Qt patches for headers/footers). For advanced PDF features, consider downloading the patched version from the [official wkhtmltopdf releases](https://wkhtmltopdf.org/downloads.html).
+
+#### 8. Install Apache
+
+```bash
+sudo apt install -y apache2 libapache2-mod-php8.3
+sudo a2enmod rewrite
+sudo systemctl enable apache2
+```
+
+#### 9. Install Supervisor (for Queue Workers)
+
+```bash
+sudo apt install -y supervisor
+sudo systemctl enable supervisor
+```
+
+### Application Installation
+
+#### 1. Clone the Repository
+
+```bash
+cd /var/www
+sudo git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git
+cd GDGoC-certs-v3
+```
+
+#### 2. Install PHP Dependencies
+
+```bash
+composer install --optimize-autoloader --no-dev
+```
+
+#### 3. Install Node.js Dependencies and Build Assets
+
+```bash
+npm ci
+npm run build
+```
+
+#### 4. Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your production settings:
+
+```env
+APP_NAME="GDGoC Certs"
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=
+APP_URL=https://certs.your-domain.com
+
+# Database Configuration (PostgreSQL)
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=gdgoc_certs
+DB_USERNAME=gdgoc_user
+DB_PASSWORD=your_secure_password
+
+# Redis Configuration (recommended for production)
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+
+# Domain Configuration
+DOMAIN_PUBLIC=certs.your-domain.com
+DOMAIN_ADMIN=admin.certs.your-domain.com
+VALIDATION_DOMAIN=certs.your-domain.com
+
+# PDF Generation (wkhtmltopdf binary path)
+# Default path on Ubuntu: /usr/bin/wkhtmltopdf
+# SNAPPY_PDF_BINARY=/usr/bin/wkhtmltopdf
+```
+
+#### 5. Generate Application Key
+
+```bash
+php artisan key:generate
+```
+
+#### 6. Set Directory Permissions
+
+```bash
+sudo chown -R www-data:www-data /var/www/GDGoC-certs-v3
+sudo chmod -R 755 /var/www/GDGoC-certs-v3
+sudo chmod -R 775 /var/www/GDGoC-certs-v3/storage
+sudo chmod -R 775 /var/www/GDGoC-certs-v3/bootstrap/cache
+```
+
+#### 7. Run Database Migrations
+
+```bash
+php artisan migrate --force
+```
+
+#### 8. Seed the Database (Optional)
+
+```bash
+php artisan db:seed
+```
+
+#### 9. Optimize for Production
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+```
+
+### Web Server Configuration
+
+#### Apache Configuration
+
+Create a virtual host configuration:
+
+```bash
+sudo nano /etc/apache2/sites-available/gdgoc-certs.conf
+```
+
+Add the following:
+
+```apache
+<VirtualHost *:80>
+    ServerName certs.your-domain.com
+    ServerAlias admin.certs.your-domain.com
+    DocumentRoot /var/www/GDGoC-certs-v3/public
+
+    <Directory /var/www/GDGoC-certs-v3/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/gdgoc-certs-error.log
+    CustomLog ${APACHE_LOG_DIR}/gdgoc-certs-access.log combined
+</VirtualHost>
+```
+
+Enable the site and disable the default site:
+
+```bash
+sudo a2dissite 000-default
+sudo a2ensite gdgoc-certs
+sudo systemctl reload apache2
+```
+
+### Process Management
+
+#### Queue Worker Configuration (Supervisor)
+
+Create a Supervisor configuration for the queue worker:
+
+```bash
+sudo nano /etc/supervisor/conf.d/gdgoc-queue-worker.conf
+```
+
+Add the following:
+
+```ini
+[program:gdgoc-queue-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/GDGoC-certs-v3/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/GDGoC-certs-v3/storage/logs/queue-worker.log
+stopwaitsecs=3600
+```
+
+#### Scheduler Configuration (Cron)
+
+Add the Laravel scheduler to crontab:
+
+```bash
+sudo crontab -e -u www-data
+```
+
+Add the following line:
+
+```cron
+* * * * * cd /var/www/GDGoC-certs-v3 && php artisan schedule:run >> /dev/null 2>&1
+```
+
+#### Start Supervisor Processes
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start gdgoc-queue-worker:*
+```
+
+### SSL/TLS Configuration
+
+Use Certbot to obtain and configure SSL certificates:
+
+```bash
+# Install Certbot for Apache
+sudo apt install -y certbot python3-certbot-apache
+
+# Obtain certificates
+sudo certbot --apache -d certs.your-domain.com -d admin.certs.your-domain.com
+```
+
+Certbot will automatically configure SSL and set up auto-renewal.
+
+### Maintenance Commands (Non-Docker)
+
+```bash
+# Clear all caches
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Rebuild caches
+php artisan optimize
+
+# Run migrations
+php artisan migrate --force
+
+# Restart queue workers after code changes
+sudo supervisorctl restart gdgoc-queue-worker:*
+
+# View Laravel logs
+tail -f /var/www/GDGoC-certs-v3/storage/logs/laravel.log
+
+# View queue worker logs
+tail -f /var/www/GDGoC-certs-v3/storage/logs/queue-worker.log
+```
+
+### Updating the Application (Non-Docker)
+
+```bash
+cd /var/www/GDGoC-certs-v3
+
+# Pull latest changes
+git pull origin main
+
+# Install dependencies
+composer install --optimize-autoloader --no-dev
+npm ci
+npm run build
+
+# Run migrations
+php artisan migrate --force
+
+# Clear and rebuild caches
+php artisan optimize
+
+# Restart queue workers
+sudo supervisorctl restart gdgoc-queue-worker:*
+```
+
+---
+
+## Docker Deployment
+
+This section covers deploying the application using Docker and Docker Compose (recommended for most use cases).
+
+### Prerequisites (Docker)
 
 - Docker Engine 20.10+
 - Docker Compose V2 2.0+
@@ -27,9 +394,8 @@ The application consists of the following services:
 2. **Queue Worker** (`queue-worker`) - Processes background jobs
 3. **Scheduler** (`scheduler`) - Runs scheduled Laravel tasks
 4. **NGINX** (`nginx`) - Internal web server for PHP-FPM routing
-5. **PostgreSQL** (`postgres`) - Primary database (default)
-6. **MySQL** (`mysql`) - Alternative database option
-7. **Redis** (`redis`) - Cache and queue storage
+5. **PostgreSQL** (`postgres`) - Database
+6. **Redis** (`redis`) - Cache and queue storage
 
 ## Local Development Setup
 
@@ -124,12 +490,10 @@ docker compose exec php php artisan db:seed
 On your production server:
 
 ```bash
-# Create application directory
-mkdir -p /var/www/gdgoc-certs
-cd /var/www/gdgoc-certs
-
 # Clone the repository
-git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git .
+cd /var/www
+git clone https://github.com/GDG-on-Campus-ASU/GDGoC-certs-v3.git
+cd GDGoC-certs-v3
 git checkout main
 ```
 
@@ -368,7 +732,7 @@ Configure the following secrets in your GitHub repository (Settings > Secrets an
 - `PRODUCTION_USER`: SSH username
 - `SSH_PRIVATE_KEY`: Private SSH key for authentication
 - `SSH_PORT`: SSH port (optional, defaults to 22)
-- `PRODUCTION_PATH`: Path to application directory (e.g., `/var/www/gdgoc-certs`)
+- `PRODUCTION_PATH`: Path to application directory (e.g., `/var/www/GDGoC-certs-v3`)
 
 ### Deployment Workflow
 
@@ -441,7 +805,7 @@ To deploy manually:
 
 ```bash
 # On production server
-cd /var/www/gdgoc-certs
+cd /var/www/GDGoC-certs-v3
 git pull origin main
 docker compose pull
 docker compose up -d --remove-orphans
@@ -507,29 +871,6 @@ docker compose exec postgres pg_dump -U gdgoc_user gdgoc_certs > backup.sql
 
 # Restore database
 cat backup.sql | docker compose exec -T postgres psql -U gdgoc_user gdgoc_certs
-```
-
-### MySQL (Alternative)
-
-To use MySQL instead of PostgreSQL, update `.env`:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-```
-
-Then:
-
-```bash
-# Access MySQL shell
-docker compose exec mysql mysql -u gdgoc_user -p gdgoc_certs
-
-# Backup database
-docker compose exec mysql mysqldump -u gdgoc_user -p gdgoc_certs > backup.sql
-
-# Restore database
-cat backup.sql | docker compose exec -T mysql mysql -u gdgoc_user -p gdgoc_certs
 ```
 
 ## Troubleshooting
