@@ -13,6 +13,7 @@ return [
     |
     */
 
+    'validation' => env('VALIDATION_DOMAIN', 'certs.gdg-oncampus.dev'),
     'public' => env('DOMAIN_PUBLIC', 'certs.gdg-oncampus.dev'),
     'admin' => env('DOMAIN_ADMIN', 'sudo.certs-admin.certs.gdg-oncampus.dev'),
 
