@@ -10,6 +10,7 @@ This document provides instructions for deploying the GDGoC Certificate Generati
 - [Database Setup](#database-setup)
 - [Application Setup](#application-setup)
 - [Virtual Host Configuration](#virtual-host-configuration)
+- [Mercury Mail Configuration](#mercury-mail-configuration-email-testing)
 - [Running the Application](#running-the-application)
 - [Troubleshooting](#troubleshooting)
 
@@ -319,6 +320,168 @@ VALIDATION_DOMAIN=gdgoc-certs.local
 ### 5. Restart Apache
 
 Restart Apache from XAMPP Control Panel or via command line.
+
+## Mercury Mail Configuration (Email Testing)
+
+Mercury Mail is included with XAMPP (Windows only) and provides a local mail server for testing email functionality. This section covers how to configure Mercury for SMTP and IMAP to test the application's mailing system.
+
+> **Note:** Mercury Mail is only available in the Windows version of XAMPP. For macOS/Linux, see the [Alternative: MailHog](#alternative-mailhog-macos--linux) section below.
+
+### 1. Enable Mercury Mail in XAMPP
+
+1. Open **XAMPP Control Panel**
+2. Click **Start** next to **Mercury**
+3. If Mercury doesn't appear, you may need to reinstall XAMPP with Mercury selected
+
+### 2. Configure Mercury Mail Server
+
+1. Click **Admin** next to Mercury in XAMPP Control Panel (or open `C:\xampp\MercuryMail\MERCURY.EXE`)
+2. The Mercury Mail Transport System window will open
+
+#### Configure SMTP (Outgoing Mail)
+
+1. Go to **Configuration** → **MercuryS SMTP Server**
+2. Configure the following:
+   - **Listen on TCP/IP port:** `25` (default) or `587`
+   - **Announce myself as:** `localhost`
+3. Under **Connection control** tab:
+   - Check **"Allow relay for local addresses"**
+   - Check **"Allow relay for authenticated users"**
+4. Click **OK** to save
+
+#### Configure POP3/IMAP (Incoming Mail)
+
+**For POP3:**
+1. Go to **Configuration** → **MercuryP POP3 Server**
+2. Ensure **Listen on TCP/IP port** is set to `110`
+3. Click **OK**
+
+**For IMAP:**
+1. Go to **Configuration** → **MercuryI IMAP4rev1 Server**
+2. Ensure **Listen on TCP/IP port** is set to `143`
+3. Click **OK**
+
+### 3. Create a Test Mail User
+
+1. In Mercury Mail, go to **Configuration** → **Manage local users**
+2. Click **New**
+3. Configure:
+   - **Username:** `testuser`
+   - **Personal name:** `Test User`
+   - **Password:** Choose a password
+4. Click **Add** and then **Close**
+
+### 4. Configure Laravel .env for Mercury
+
+Update your `.env` file with the following mail settings:
+
+```env
+# Mail Configuration for Mercury (XAMPP)
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=25
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="noreply@localhost"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+If you enabled authentication in Mercury:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=25
+MAIL_USERNAME=testuser
+MAIL_PASSWORD=your_password
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="testuser@localhost"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### 5. Test Email Sending
+
+Use Laravel's Tinker to test sending an email:
+
+```bash
+php artisan tinker
+```
+
+Then run:
+
+```php
+Mail::raw('Test email from GDGoC Certs', function($message) {
+    $message->to('testuser@localhost')->subject('Test Email');
+});
+```
+
+### 6. View Received Emails
+
+1. Open Mercury Mail Admin
+2. Go to **File** → **Open mail folder** → Select user folder
+3. Or configure an email client (Thunderbird, Outlook) with:
+   - **IMAP Server:** `127.0.0.1` (Port `143`)
+   - **POP3 Server:** `127.0.0.1` (Port `110`)
+   - **SMTP Server:** `127.0.0.1` (Port `25`)
+   - **Username:** `testuser`
+   - **Password:** Your configured password
+
+### Alternative: MailHog (macOS / Linux)
+
+For macOS and Linux users, MailHog is recommended as Mercury is not available.
+
+#### Install MailHog
+
+**macOS (with Homebrew):**
+```bash
+brew install mailhog
+```
+
+**Linux:**
+```bash
+# Download the latest release
+wget https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64
+chmod +x MailHog_linux_amd64
+sudo mv MailHog_linux_amd64 /usr/local/bin/mailhog
+```
+
+#### Run MailHog
+
+```bash
+mailhog
+```
+
+MailHog runs on:
+- **SMTP Server:** `127.0.0.1:1025`
+- **Web UI:** `http://localhost:8025`
+
+#### Configure Laravel .env for MailHog
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="noreply@localhost"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+#### View Emails in MailHog
+
+Open `http://localhost:8025` in your browser to see all captured emails.
+
+### Alternative: Laravel Log Driver (All Platforms)
+
+For quick testing without setting up a mail server, use Laravel's log driver:
+
+```env
+MAIL_MAILER=log
+```
+
+Emails will be written to `storage/logs/laravel.log` instead of being sent.
 
 ## Running the Application
 
