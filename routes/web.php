@@ -20,13 +20,13 @@ use App\Http\Controllers\SmtpProviderController;
 use App\Http\Middleware\EnsureUserIsSuperadmin;
 use Illuminate\Support\Facades\Route;
 
-// Public validation page (certs.gdg-oncampus.dev)
+// Public validation page (certs.gdg-oncampus.dev) - accessible via configured public domain
 Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
     ->group(function () {
-        Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index');
-        Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
-        Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show');
-        Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download');
+        Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index.domain');
+        Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.domain');
+        Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.domain');
+        Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download.domain');
     });
 
 // Admin dashboard (sudo.certs-admin.certs.gdg-oncampus.dev)
@@ -189,6 +189,14 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 
     // Documentation Management
     Route::resource('documentation', AdminDocumentationController::class);
+});
+
+// Public Certificate Validation Routes - Non-domain fallback (accessible from any domain)
+Route::prefix('public')->group(function () {
+    Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index');
+    Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
+    Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show');
+    Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download');
 });
 
 // Public Certificate Validation Routes - Domain-based (keep for backwards compatibility)
