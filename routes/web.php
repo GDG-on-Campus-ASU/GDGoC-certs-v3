@@ -103,7 +103,6 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
         // Profile routes (on admin domain)
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit.admin');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update.admin');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy.admin');
     });
 
 // Add a root route for the admin domain to redirect to login
@@ -129,7 +128,6 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // OAuth / OIDC Routes (non-domain fallback)
