@@ -88,4 +88,12 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
         $response->assertDontSee('SSO Login');
     }
+
+    public function test_session_lifetime_is_configured_to_8_hours(): void
+    {
+        // Verify session lifetime is set to 480 minutes (8 hours)
+        $sessionLifetime = config('session.lifetime');
+        
+        $this->assertEquals(480, $sessionLifetime, 'Session lifetime should be 480 minutes (8 hours)');
+    }
 }
