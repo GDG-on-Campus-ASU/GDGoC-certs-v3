@@ -100,6 +100,15 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                 Route::resource('documentation', AdminDocumentationController::class);
             });
 
+        // Documentation viewing routes for superadmins (outside admin prefix)
+        Route::middleware(EnsureUserIsSuperadmin::class)
+            ->prefix('dashboard')
+            ->name('dashboard.')
+            ->group(function () {
+                Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
+                Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
+            });
+
         // Profile routes (on admin domain)
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit.admin');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update.admin');
@@ -189,6 +198,12 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 
     // Documentation Management
     Route::resource('documentation', AdminDocumentationController::class);
+});
+
+// Documentation viewing routes for superadmins (non-domain fallback)
+Route::middleware(['auth', 'superadmin'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
+    Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
 });
 
 // Public Certificate Validation Routes - Domain-based (keep for backwards compatibility)
