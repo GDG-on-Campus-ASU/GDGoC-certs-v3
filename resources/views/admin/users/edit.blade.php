@@ -28,6 +28,23 @@
                             <p class="text-sm text-gray-600 mt-1">This is the only way to set/change the organization name</p>
                         </div>
 
+                        <!-- Role (Display only) -->
+                        <div class="mb-4">
+                            <x-input-label for="role_display" :value="__('Role')" />
+                            <div class="mt-1 px-4 py-2 bg-gray-100 rounded-md">
+                                @if($user->role === 'admin')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                        Admin
+                                    </span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Leader
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">User role cannot be changed after creation</p>
+                        </div>
+
                         <!-- Password -->
                         <div class="mb-4">
                             <x-input-label for="password" :value="__('New Password (optional)')" />

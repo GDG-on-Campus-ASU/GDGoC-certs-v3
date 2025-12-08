@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->string('org_name')->nullable();
-            $table->enum('role', ['leader', 'superadmin'])->default('leader');
+            $table->enum('role', ['leader', 'admin', 'superadmin'])->default('leader');
             $table->enum('status', ['active', 'suspended', 'terminated'])->default('active');
             $table->text('termination_reason')->nullable();
             $table->string('oauth_provider')->nullable();
