@@ -162,4 +162,39 @@ class AdminUserManagementTest extends TestCase
             'id' => $leader->id,
         ]);
     }
+
+    public function test_superadmin_cannot_delete_themselves(): void
+    {
+        $superadmin = User::factory()->create([
+            'role' => 'superadmin',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($superadmin)->delete(route('admin.users.destroy', $superadmin));
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('users', [
+            'id' => $superadmin->id,
+        ]);
+    }
+
+    public function test_superadmin_cannot_delete_other_superadmins(): void
+    {
+        $superadmin1 = User::factory()->create([
+            'role' => 'superadmin',
+            'status' => 'active',
+        ]);
+
+        $superadmin2 = User::factory()->create([
+            'role' => 'superadmin',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($superadmin1)->delete(route('admin.users.destroy', $superadmin2));
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('users', [
+            'id' => $superadmin2->id,
+        ]);
+    }
 }
