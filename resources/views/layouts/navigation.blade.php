@@ -16,15 +16,19 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     
+                    <x-nav-link :href="route('dashboard.certificates.index')" :active="request()->routeIs('dashboard.certificates.*')">
+                        {{ __('Certificates') }}
+                    </x-nav-link>
+                    
                     @if(Auth::user()->role === 'superadmin')
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                             {{ __('Admin Panel') }}
                         </x-nav-link>
-                    @else
-                        <x-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
-                            {{ __('Help') }}
-                        </x-nav-link>
                     @endif
+                    
+                    <x-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
+                        {{ __('Help') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -82,15 +86,19 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
             
+            <x-responsive-nav-link :href="route('dashboard.certificates.index')" :active="request()->routeIs('dashboard.certificates.*')">
+                {{ __('Certificates') }}
+            </x-responsive-nav-link>
+            
             @if(Auth::user()->role === 'superadmin')
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                     {{ __('Admin Panel') }}
                 </x-responsive-nav-link>
-            @else
-                <x-responsive-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
-                    {{ __('Help') }}
-                </x-responsive-nav-link>
             @endif
+            
+            <x-responsive-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
+                {{ __('Help') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->

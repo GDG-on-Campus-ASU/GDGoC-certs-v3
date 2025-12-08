@@ -62,6 +62,7 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+
     public function test_user_can_set_org_name_when_null(): void
     {
         $user = User::factory()->create([

@@ -41,4 +41,29 @@ class OidcSetting extends Model
     {
         $this->attributes['client_secret'] = $value ? encrypt($value) : null;
     }
+
+    /**
+     * Check if OIDC is properly configured with all required settings.
+     */
+    public function isConfigured(): bool
+    {
+        return !empty($this->client_id) 
+            && !empty($this->client_secret) 
+            && !empty($this->login_endpoint_url)
+            && !empty($this->userinfo_endpoint_url);
+    }
+
+    /**
+     * Get the configured OIDC settings or null if not configured.
+     */
+    public static function getConfigured(): ?self
+    {
+        $settings = self::first();
+        
+        if ($settings && $settings->isConfigured()) {
+            return $settings;
+        }
+        
+        return null;
+    }
 }
