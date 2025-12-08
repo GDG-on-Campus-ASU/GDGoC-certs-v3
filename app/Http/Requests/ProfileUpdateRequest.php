@@ -25,11 +25,13 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'org_name' => ['required', 'string', 'max:255'],
         ];
 
-        // Only allow org_name to be set if it's currently null
+        // org_name is required only if it's currently null (first-time set)
+        // If already set, it's optional in updates
         if ($this->user()->org_name === null) {
+            $rules['org_name'] = ['required', 'string', 'max:255'];
+        } else {
             $rules['org_name'] = ['nullable', 'string', 'max:255'];
         }
 
