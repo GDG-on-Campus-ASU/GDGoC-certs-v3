@@ -149,7 +149,7 @@
                                                             {{ $template->name }}
                                                         </td>
                                                         <td class="px-6 py-4 text-sm text-gray-500">
-                                                            {{ Str::limit($template->subject, 50) }}
+                                                            {{ str($template->subject)->limit(50) }}
                                                         </td>
                                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {{ $template->created_at->format('M d, Y') }}
@@ -202,7 +202,7 @@
                                                             {{ $template->name }}
                                                         </td>
                                                         <td class="px-6 py-4 text-sm text-gray-500">
-                                                            {{ Str::limit($template->subject, 50) }}
+                                                            {{ str($template->subject)->limit(50) }}
                                                         </td>
                                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                             <form action="{{ route('dashboard.templates.email.clone', $template) }}" method="POST" class="inline-block">
