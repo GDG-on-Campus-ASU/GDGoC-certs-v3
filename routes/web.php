@@ -13,6 +13,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\Leader\CertificateController as LeaderCertificateController;
+use App\Http\Controllers\Leader\ConfigurationController;
 use App\Http\Controllers\Leader\DocumentationController as LeaderDocumentationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCertificateController;
@@ -68,6 +69,9 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
 
             // SMTP Providers
             Route::resource('smtp', SmtpProviderController::class)->names('smtp');
+
+            // Configuration
+            Route::get('/configuration', [ConfigurationController::class, 'index'])->name('configuration.index');
 
             // Documentation
             Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
@@ -171,6 +175,9 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
 
     // SMTP Providers
     Route::resource('smtp', SmtpProviderController::class)->names('smtp');
+
+    // Configuration
+    Route::get('/configuration', [ConfigurationController::class, 'index'])->name('configuration.index');
 
     // Documentation
     Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
