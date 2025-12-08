@@ -24,11 +24,11 @@
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                             {{ __('Admin Panel') }}
                         </x-nav-link>
-                    @else
-                        <x-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
-                            {{ __('Help') }}
-                        </x-nav-link>
                     @endif
+                    
+                    <x-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
+                        {{ __('Help') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -94,11 +94,11 @@
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                     {{ __('Admin Panel') }}
                 </x-responsive-nav-link>
-            @else
-                <x-responsive-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
-                    {{ __('Help') }}
-                </x-responsive-nav-link>
             @endif
+            
+            <x-responsive-nav-link :href="route('dashboard.documentation.index')" :active="request()->routeIs('dashboard.documentation.*')">
+                {{ __('Help') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
