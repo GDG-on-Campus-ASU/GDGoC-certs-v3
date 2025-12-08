@@ -133,3 +133,4 @@ class ProfileTest extends TestCase
         $this->assertSame('Original Organization', $user->org_name);
     }
 }
+
