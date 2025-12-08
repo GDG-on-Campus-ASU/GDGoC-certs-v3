@@ -30,6 +30,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
+                'org_name' => 'Test Organization',
             ]);
 
         $response
@@ -40,6 +41,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('Test Organization', $user->org_name);
         // Email verification disabled - status unchanged
         $this->assertNotNull($user->email_verified_at);
     }
@@ -53,6 +55,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
+                'org_name' => $user->org_name,
             ]);
 
         $response

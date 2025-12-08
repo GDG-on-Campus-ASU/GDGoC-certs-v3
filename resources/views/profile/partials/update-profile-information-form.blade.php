@@ -39,6 +39,11 @@
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('org_name')" />
             @endif
+            <x-text-input id="org_name" name="org_name" type="text" class="mt-1 block w-full" :value="old('org_name', $user->org_name)" required autocomplete="organization" />
+            <x-input-error class="mt-2" :messages="$errors->get('org_name')" />
+            <p class="mt-1 text-sm text-gray-600">
+                {{ __('Your organization name will be displayed on certificates.') }}
+            </p>
         </div>
 
         <div class="flex items-center gap-4">

@@ -78,6 +78,11 @@
                             <h4 class="font-semibold text-green-800">Login Logs</h4>
                             <p class="text-sm text-green-600">View authentication activity</p>
                         </a>
+                        
+                        <a href="{{ route('admin.documentation.index') }}" class="block p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition">
+                            <h4 class="font-semibold text-yellow-800">Documentation Manager</h4>
+                            <p class="text-sm text-yellow-600">Manage help documentation pages</p>
+                        </a>
                     </div>
                 </div>
             </div>
