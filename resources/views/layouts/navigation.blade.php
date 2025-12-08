@@ -134,13 +134,13 @@
                 <x-responsive-nav-link :href="route('dashboard.certificates.bulk')" :active="request()->routeIs('dashboard.certificates.bulk')">
                     {{ __('Bulk Create') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dashboard.templates.certificates.index')" :active="request()->routeIs('dashboard.templates.certificates*')">
+                <x-responsive-nav-link :href="route('dashboard.templates.certificates.index')" :active="request()->routeIs('dashboard.templates.certificates.*')">
                     {{ __('Certificate Templates') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dashboard.templates.email.index')" :active="request()->routeIs('dashboard.templates.email*')">
+                <x-responsive-nav-link :href="route('dashboard.templates.email.index')" :active="request()->routeIs('dashboard.templates.email.*')">
                     {{ __('Email Templates') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dashboard.smtp.index')" :active="request()->routeIs('dashboard.smtp*')">
+                <x-responsive-nav-link :href="route('dashboard.smtp.index')" :active="request()->routeIs('dashboard.smtp.*')">
                     {{ __('SMTP Settings') }}
                 </x-responsive-nav-link>
             </div>
