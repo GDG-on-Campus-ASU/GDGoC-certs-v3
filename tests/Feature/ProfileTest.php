@@ -41,7 +41,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        // Do not assert email_verified_at here — emails are managed by super-admin.
+        // Do not assert email_verified_at here -- emails are managed by super-admin.
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -123,7 +123,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Updated Name',
                 'email' => 'updated@example.com',
-                'org_name' => 'Original Organization',
+                'org_name' => $user->org_name,
             ]);
 
         $response
