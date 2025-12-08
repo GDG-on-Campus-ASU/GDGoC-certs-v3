@@ -43,6 +43,11 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Only superadmins can delete accounts
+        if ($request->user()->role !== 'superadmin') {
+            abort(403, 'Only superadmins can delete accounts.');
+        }
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);

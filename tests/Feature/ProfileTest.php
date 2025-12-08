@@ -62,9 +62,9 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_superadmin_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'superadmin']);
 
         $response = $this
             ->actingAs($user)
@@ -80,9 +80,24 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh());
     }
 
+    public function test_non_superadmin_cannot_delete_their_account(): void
+    {
+        $user = User::factory()->create(['role' => 'leader']);
+
+        $response = $this
+            ->actingAs($user)
+            ->delete('/profile', [
+                'password' => 'password',
+            ]);
+
+        $response->assertForbidden();
+
+        $this->assertNotNull($user->fresh());
+    }
+
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'superadmin']);
 
         $response = $this
             ->actingAs($user)
