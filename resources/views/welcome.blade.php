@@ -381,7 +381,17 @@
                     </main>
 
                     <footer class="py-16 text-center text-sm text-black dark:text-white/70">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                        <div class="mb-4">
+                            <p class="text-sm mb-3">
+                                Made with ❤️ by <a href="https://www.linkedin.com/company/gdg-asu/" class="font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" target="_blank" rel="noopener noreferrer">GDG on Campus • ASU</a>
+                            </p>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+                                <p><strong>Disclaimer:</strong> This application and domain are independent projects built by the GDG community, for the community. They are not Google products and are not affiliated with, endorsed by, or maintained by Google.</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-400 dark:text-gray-600">
+                            Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                        </div>
                     </footer>
                 </div>
             </div>

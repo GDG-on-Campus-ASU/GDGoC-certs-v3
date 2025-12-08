@@ -27,6 +27,18 @@
 
         <div>
             <x-input-label for="org_name" :value="__('Organization Name')" />
+            @if($user->org_name)
+                <x-text-input id="org_name" name="org_name" type="text" class="mt-1 block w-full bg-gray-100" :value="old('org_name', $user->org_name)" readonly />
+                <p class="mt-1 text-sm text-gray-600">
+                    {{ __('Organization name cannot be changed. Contact a super admin if you need to update it.') }}
+                </p>
+            @else
+                <x-text-input id="org_name" name="org_name" type="text" class="mt-1 block w-full" :value="old('org_name', $user->org_name)" autocomplete="organization" />
+                <div class="mt-2 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <strong>{{ __('Warning:') }}</strong> {{ __('You can\'t change your Organization Name later') }}
+                </div>
+                <x-input-error class="mt-2" :messages="$errors->get('org_name')" />
+            @endif
             <x-text-input id="org_name" name="org_name" type="text" class="mt-1 block w-full" :value="old('org_name', $user->org_name)" required autocomplete="organization" />
             <x-input-error class="mt-2" :messages="$errors->get('org_name')" />
             <p class="mt-1 text-sm text-gray-600">
