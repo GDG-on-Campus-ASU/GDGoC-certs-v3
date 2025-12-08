@@ -8,7 +8,7 @@
         </div>
     @endif
 
-    <!-- SSO Login Button -->
+    <!-- Single Sign-On Button -->
     @if($oidcConfigured ?? false)
         <div class="mb-6">
             <a href="{{ route('oauth.redirect') }}" class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
