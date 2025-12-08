@@ -15,7 +15,7 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -26,5 +26,12 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
+
+        // Only allow org_name to be set if it's currently null
+        if ($this->user()->org_name === null) {
+            $rules['org_name'] = ['nullable', 'string', 'max:255'];
+        }
+
+        return $rules;
     }
 }
