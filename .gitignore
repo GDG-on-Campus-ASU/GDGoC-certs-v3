@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/database/*.sqlite
+/database/*.sqlite-journal
+gdgoc_certs
