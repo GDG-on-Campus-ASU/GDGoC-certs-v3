@@ -35,7 +35,7 @@
             @else
                 <x-text-input id="org_name" name="org_name" type="text" class="mt-1 block w-full" :value="old('org_name', $user->org_name)" autocomplete="organization" />
                 <div class="mt-2 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    <strong>{{ __('Warning:') }}</strong> {{ __('You can\'t change your Org Name later') }}
+                    <strong>{{ __('Warning:') }}</strong> {{ __('You can\'t change your Organization Name later') }}
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('org_name')" />
             @endif
