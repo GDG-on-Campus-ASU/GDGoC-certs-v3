@@ -31,11 +31,11 @@ Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
 
 // Admin dashboard (sudo.certs-admin.certs.gdg-oncampus.dev)
 Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev'))
-    ->middleware(['auth'])
+    ->middleware(['auth', 'org_name'])
     ->group(function () {
         // OAuth / OIDC Routes
-        Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect')->withoutMiddleware(['auth']);
-        Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback')->withoutMiddleware(['auth']);
+        Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect')->withoutMiddleware(['auth', 'org_name']);
+        Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback')->withoutMiddleware(['auth', 'org_name']);
 
         // Leader Routes - Dashboard
         Route::get('/dashboard', function () {
@@ -112,6 +112,11 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
         // Profile routes (on admin domain)
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit.admin');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update.admin');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy.admin');
+        // Profile routes (on admin domain) - without org_name middleware to allow completion
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit.admin')->withoutMiddleware(['org_name']);
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update.admin')->withoutMiddleware(['org_name']);
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy.admin')->withoutMiddleware(['org_name']);
     });
 
 // Add a root route for the admin domain to redirect to login
@@ -132,7 +137,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+})->middleware(['auth', 'org_name'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -144,7 +149,7 @@ Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.
 Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback.fallback');
 
 // Leader Routes - Protected by auth middleware (non-domain fallback)
-Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware(['auth', 'org_name'])->prefix('dashboard')->name('dashboard.')->group(function () {
     // Certificate Templates
     Route::post('/templates/certificates/{certificateTemplate}/clone', [CertificateTemplateController::class, 'clone'])->name('templates.certificates.clone');
     Route::post('/templates/certificates/{certificateTemplate}/reset', [CertificateTemplateController::class, 'reset'])->name('templates.certificates.reset');
@@ -176,7 +181,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
 });
 
 // Admin Routes - Protected by auth and superadmin middleware (non-domain fallback)
-Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'org_name', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // User Management
