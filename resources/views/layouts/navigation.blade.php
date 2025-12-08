@@ -17,42 +17,40 @@
                     </x-nav-link>
                     
                     <!-- Certificates Dropdown -->
-                    <div class="hidden sm:flex sm:items-center">
-                        <x-dropdown align="left" width="48">
-                            <x-slot name="trigger">
-                                <button class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('dashboard.certificates.*') || request()->routeIs('dashboard.templates.*') || request()->routeIs('dashboard.smtp.*') ? 'border-indigo-400 text-gray-900 focus:border-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:text-gray-700 focus:border-gray-300' }}">
-                                    <div>{{ __('Certificates') }}</div>
-                                    <div class="ms-1">
-                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            </x-slot>
-                            
-                            <x-slot name="content">
-                                <x-dropdown-link :href="route('dashboard.certificates.index')">
-                                    {{ __('My Certificates') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('dashboard.certificates.create')">
-                                    {{ __('Create Certificate') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('dashboard.certificates.bulk')">
-                                    {{ __('Bulk Create') }}
-                                </x-dropdown-link>
-                                <div class="border-t border-gray-200"></div>
-                                <x-dropdown-link :href="route('dashboard.templates.certificates.index')">
-                                    {{ __('Certificate Templates') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('dashboard.templates.email.index')">
-                                    {{ __('Email Templates') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('dashboard.smtp.index')">
-                                    {{ __('SMTP Settings') }}
-                                </x-dropdown-link>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
+                    <x-dropdown align="left" width="48">
+                        <x-slot name="trigger">
+                            <button class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('dashboard.certificates.*') || request()->routeIs('dashboard.templates.*') || request()->routeIs('dashboard.smtp.*') ? 'border-indigo-400 text-gray-900 focus:border-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:text-gray-700 focus:border-gray-300' }}">
+                                <div>{{ __('Certificates') }}</div>
+                                <div class="ms-1">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </button>
+                        </x-slot>
+                        
+                        <x-slot name="content">
+                            <x-dropdown-link :href="route('dashboard.certificates.index')">
+                                {{ __('My Certificates') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('dashboard.certificates.create')">
+                                {{ __('Create Certificate') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('dashboard.certificates.bulk')">
+                                {{ __('Bulk Create') }}
+                            </x-dropdown-link>
+                            <div class="border-t border-gray-200"></div>
+                            <x-dropdown-link :href="route('dashboard.templates.certificates.index')">
+                                {{ __('Certificate Templates') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('dashboard.templates.email.index')">
+                                {{ __('Email Templates') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('dashboard.smtp.index')">
+                                {{ __('SMTP Settings') }}
+                            </x-dropdown-link>
+                        </x-slot>
+                    </x-dropdown>
                     
                     @if(Auth::user()->role === 'superadmin')
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
@@ -125,13 +123,13 @@
                 <div class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     {{ __('Certificates') }}
                 </div>
-                <x-responsive-nav-link :href="route('dashboard.certificates.index')" :active="request()->routeIs('dashboard.certificates.*')">
+                <x-responsive-nav-link :href="route('dashboard.certificates.index')" :active="request()->routeIs('dashboard.certificates.index')">
                     {{ __('My Certificates') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dashboard.certificates.create')" :active="request()->routeIs('dashboard.certificates.*')">
+                <x-responsive-nav-link :href="route('dashboard.certificates.create')" :active="request()->routeIs('dashboard.certificates.create')">
                     {{ __('Create Certificate') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dashboard.certificates.bulk')" :active="request()->routeIs('dashboard.certificates.*')">
+                <x-responsive-nav-link :href="route('dashboard.certificates.bulk')" :active="request()->routeIs('dashboard.certificates.bulk')">
                     {{ __('Bulk Create') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('dashboard.templates.certificates.index')" :active="request()->routeIs('dashboard.templates.certificates.*')">
