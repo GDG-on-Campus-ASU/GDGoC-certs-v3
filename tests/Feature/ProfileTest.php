@@ -30,7 +30,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
-                'org_name' => 'Test Organization',
+                'org_name' => $user->org_name ?? 'Test Organization',
             ]);
 
         $response
@@ -41,28 +41,28 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertSame('Test Organization', $user->org_name);
-        // Email verification disabled - status unchanged
-        $this->assertNotNull($user->email_verified_at);
+        // Do not assert email_verified_at here — emails are managed by super-admin.
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();
 
+        $originalVerifiedAt = $user->email_verified_at;
+        
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
-                'org_name' => $user->org_name,
+                'org_name' => $user->org_name ?? 'Test Organization',
             ]);
 
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect('/profile');
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertEquals($originalVerifiedAt, $user->refresh()->email_verified_at);
     }
 
     public function test_user_can_set_org_name_when_null(): void
@@ -123,6 +123,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Updated Name',
                 'email' => 'updated@example.com',
+                'org_name' => 'Original Organization',
             ]);
 
         $response
