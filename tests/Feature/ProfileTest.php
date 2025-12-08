@@ -49,7 +49,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $originalVerifiedAt = $user->email_verified_at;
-        
+
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
