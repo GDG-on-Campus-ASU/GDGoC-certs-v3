@@ -18,16 +18,8 @@ class AuthenticatedSessionController extends Controller
     public function create(): View
     {
         $oidcConfigured = OidcSetting::getConfigured() !== null;
-        
-        return view('auth.login', compact('oidcConfigured'));
-        $oidcSettings = OidcSetting::first();
-        $oidcConfigured = $oidcSettings && 
-                         !empty($oidcSettings->client_id) && 
-                         !empty($oidcSettings->login_endpoint_url);
 
-        return view('auth.login', [
-            'oidcConfigured' => $oidcConfigured
-        ]);
+        return view('auth.login', compact('oidcConfigured'));
     }
 
     /**

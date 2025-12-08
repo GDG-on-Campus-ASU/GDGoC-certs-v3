@@ -24,6 +24,7 @@ class ProfileTest extends TestCase
     public function test_profile_information_can_be_updated(): void
     {
         $user = User::factory()->create();
+        $originalOrgName = $user->org_name;
 
         $response = $this
             ->actingAs($user)
@@ -41,7 +42,8 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertSame('Test Organization', $user->org_name);
+        // org_name cannot be changed once set, so it should remain the same
+        $this->assertSame($originalOrgName, $user->org_name);
         // Email verification disabled - status unchanged
         $this->assertNotNull($user->email_verified_at);
     }
