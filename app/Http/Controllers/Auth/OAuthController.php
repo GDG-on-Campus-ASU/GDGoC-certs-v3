@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OidcSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
 {
@@ -41,7 +39,21 @@ class OAuthController extends Controller
             'nonce' => $nonce,
         ];
 
-        $authUrl = $settings->login_endpoint_url . '?' . http_build_query($params);
+        // Parse the login endpoint URL to handle existing query parameters
+        $parsedUrl = parse_url($settings->login_endpoint_url);
+        $existingParams = [];
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
+        }
+        
+        // Merge parameters (new params override existing ones)
+        $allParams = array_merge($existingParams, $params);
+        
+        // Reconstruct the URL
+        $authUrl = ($parsedUrl['scheme'] ?? 'https') . '://' . 
+                   ($parsedUrl['host'] ?? '') . 
+                   ($parsedUrl['path'] ?? '') . 
+                   '?' . http_build_query($allParams);
 
         return redirect($authUrl);
     }
@@ -57,8 +69,9 @@ class OAuthController extends Controller
             return redirect()->route('login')->with('error', 'SSO authentication is not configured.');
         }
 
-        // Verify state parameter
-        if ($request->state !== $request->session()->get('oauth_state')) {
+        // Verify state parameter using hash_equals to prevent timing attacks
+        $sessionState = $request->session()->get('oauth_state');
+        if (!$sessionState || !hash_equals($sessionState, $request->state ?? '')) {
             return redirect()->route('login')->with('error', 'Invalid state parameter. Please try again.');
         }
 
