@@ -199,7 +199,9 @@ Route::prefix('public')->group(function () {
     Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download');
 });
 
-// Public Certificate Validation Routes - Domain-based (keep for backwards compatibility)
+// Public Certificate Validation Routes - Legacy domain-based routes
+// Note: Uses VALIDATION_DOMAIN env variable (deprecated) for backward compatibility with older configs
+// Newer configs should use DOMAIN_PUBLIC instead
 Route::domain(config('domains.validation'))->group(function () {
     Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index.legacy');
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.legacy');
