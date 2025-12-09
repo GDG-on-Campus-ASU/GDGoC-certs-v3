@@ -14,6 +14,7 @@ use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\Leader\CertificateController as LeaderCertificateController;
 use App\Http\Controllers\Leader\ConfigurationController;
+use App\Http\Controllers\Leader\DashboardController as LeaderDashboardController;
 use App\Http\Controllers\Leader\DocumentationController as LeaderDocumentationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCertificateController;
@@ -39,9 +40,7 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
         Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback')->withoutMiddleware(['auth', 'org_name']);
 
         // Leader Routes - Dashboard
-        Route::get('/dashboard', function () {
-            return view('dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [LeaderDashboardController::class, 'index'])->name('dashboard');
 
         // Leader Routes - Protected by auth middleware
         Route::prefix('dashboard')->name('dashboard.')->group(function () {
@@ -139,9 +138,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'org_name'])->name('dashboard');
+Route::get('/dashboard', [LeaderDashboardController::class, 'index'])->middleware(['auth', 'org_name'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
