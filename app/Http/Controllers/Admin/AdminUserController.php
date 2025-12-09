@@ -154,6 +154,11 @@ class AdminUserController extends Controller
             abort(403, 'Cannot delete other admin users.');
         }
 
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            abort(403, 'Cannot delete your own account.');
+        }
+
         $user->delete();
 
         return redirect()->route('admin.users.index')

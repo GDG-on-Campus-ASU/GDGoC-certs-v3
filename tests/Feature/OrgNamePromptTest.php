@@ -61,7 +61,8 @@ class OrgNamePromptTest extends TestCase
 
     public function test_profile_update_requires_org_name(): void
     {
-        $user = User::factory()->create();
+        // Create user without org_name to test that org_name is required for first-time set
+        $user = User::factory()->withoutOrgName()->create();
 
         $response = $this
             ->actingAs($user)

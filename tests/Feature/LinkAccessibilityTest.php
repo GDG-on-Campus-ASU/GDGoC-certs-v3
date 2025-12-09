@@ -47,6 +47,7 @@ class LinkAccessibilityTest extends TestCase
             route('dashboard.templates.certificates.index'),
             route('dashboard.templates.email.index'),
             route('dashboard.smtp.index'),
+            route('dashboard.configuration.index'),
             route('dashboard.documentation.index'),
         ];
 

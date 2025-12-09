@@ -20,6 +20,10 @@
                         {{ __('Certificates') }}
                     </x-nav-link>
                     
+                    <x-nav-link :href="route('dashboard.configuration.index')" :active="request()->routeIs('dashboard.configuration.*')">
+                        {{ __('Configuration') }}
+                    </x-nav-link>
+                    
                     @if(Auth::user()->role === 'superadmin')
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                             {{ __('Admin Panel') }}
@@ -88,6 +92,10 @@
             
             <x-responsive-nav-link :href="route('dashboard.certificates.index')" :active="request()->routeIs('dashboard.certificates.*')">
                 {{ __('Certificates') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('dashboard.configuration.index')" :active="request()->routeIs('dashboard.configuration.*')">
+                {{ __('Configuration') }}
             </x-responsive-nav-link>
             
             @if(Auth::user()->role === 'superadmin')
