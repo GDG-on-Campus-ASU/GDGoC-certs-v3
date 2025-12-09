@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\OidcSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -50,5 +51,42 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_sso_login_button_not_shown_when_oidc_not_configured(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('SSO Login');
+    }
+
+    public function test_sso_login_button_shown_when_oidc_configured(): void
+    {
+        OidcSetting::create([
+            'client_id' => 'test-client-id',
+            'client_secret' => 'test-secret',
+            'login_endpoint_url' => 'https://example.com/auth',
+            'userinfo_endpoint_url' => 'https://example.com/userinfo',
+        ]);
+
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertSee('SSO Login');
+    }
+
+    public function test_sso_login_button_not_shown_when_oidc_partially_configured(): void
+    {
+        // Create OIDC settings without login_endpoint_url
+        OidcSetting::create([
+            'client_id' => 'test-client-id',
+            'client_secret' => 'test-secret',
+        ]);
+
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('SSO Login');
     }
 }
