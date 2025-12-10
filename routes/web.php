@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminLoginLogController;
 use App\Http\Controllers\Admin\AdminOidcController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Middleware\EnsureUserIsAdminOrSuperadmin;
 use App\Http\Controllers\Admin\CertificateTemplateController as AdminCertificateTemplateController;
 use App\Http\Controllers\Admin\DocumentationController as AdminDocumentationController;
 use App\Http\Controllers\Admin\EmailTemplateController as AdminEmailTemplateController;
@@ -77,30 +78,33 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
             Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
         });
 
-        // Superadmin Routes
-        Route::middleware(EnsureUserIsSuperadmin::class)
+        // Admin and Superadmin Routes
+        Route::middleware(EnsureUserIsAdminOrSuperadmin::class)
             ->prefix('admin')
             ->name('admin.')
             ->group(function () {
                 Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-                // User Management
+                // User Management - accessible by both admin and superadmin
                 Route::resource('users', AdminUserController::class)->except(['show']);
 
-                // Template Management
-                Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
-                Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
+                // Superadmin-only routes
+                Route::middleware(EnsureUserIsSuperadmin::class)->group(function () {
+                    // Template Management
+                    Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
+                    Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
-                // OIDC Settings
-                Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
-                Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
+                    // OIDC Settings
+                    Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
+                    Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
 
-                // Login Logs
-                Route::get('/logs/logins', [AdminLoginLogController::class, 'index'])->name('logs.index');
-                Route::get('/logs/feed', [AdminLoginLogController::class, 'feed'])->name('logs.feed');
+                    // Login Logs
+                    Route::get('/logs/logins', [AdminLoginLogController::class, 'index'])->name('logs.index');
+                    Route::get('/logs/feed', [AdminLoginLogController::class, 'feed'])->name('logs.feed');
 
-                // Documentation Management
-                Route::resource('documentation', AdminDocumentationController::class);
+                    // Documentation Management
+                    Route::resource('documentation', AdminDocumentationController::class);
+                });
             });
 
         // Documentation viewing routes for superadmins (outside admin prefix)
@@ -184,27 +188,30 @@ Route::middleware(['auth', 'org_name'])->prefix('dashboard')->name('dashboard.')
     Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
 });
 
-// Admin Routes - Protected by auth and superadmin middleware (non-domain fallback)
-Route::middleware(['auth', 'org_name', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+// Admin Routes - Protected by auth and admin_or_superadmin middleware (non-domain fallback)
+Route::middleware(['auth', 'org_name', 'admin_or_superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // User Management
+    // User Management - accessible by both admin and superadmin
     Route::resource('users', AdminUserController::class)->except(['show']);
 
-    // Template Management
-    Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
-    Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
+    // Superadmin-only routes
+    Route::middleware('superadmin')->group(function () {
+        // Template Management
+        Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
+        Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
-    // OIDC Settings
-    Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
-    Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
+        // OIDC Settings
+        Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
+        Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
 
-    // Login Logs
-    Route::get('/logs/logins', [AdminLoginLogController::class, 'index'])->name('logs.index');
-    Route::get('/logs/feed', [AdminLoginLogController::class, 'feed'])->name('logs.feed');
+        // Login Logs
+        Route::get('/logs/logins', [AdminLoginLogController::class, 'index'])->name('logs.index');
+        Route::get('/logs/feed', [AdminLoginLogController::class, 'feed'])->name('logs.feed');
 
-    // Documentation Management
-    Route::resource('documentation', AdminDocumentationController::class);
+        // Documentation Management
+        Route::resource('documentation', AdminDocumentationController::class);
+    });
 });
 
 // Documentation viewing routes for superadmins (non-domain fallback)

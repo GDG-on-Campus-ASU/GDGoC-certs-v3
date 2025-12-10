@@ -13,11 +13,21 @@ class AdminUserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::where('role', '!=', 'superadmin')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $currentUser = $request->user();
+        
+        // Superadmins can see all non-superadmin users
+        // Admins can only see leaders
+        if ($currentUser->role === 'superadmin') {
+            $users = User::whereIn('role', ['leader', 'admin'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+        } else {
+            $users = User::where('role', 'leader')
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+        }
 
         return view('admin.users.index', compact('users'));
     }
@@ -35,17 +45,29 @@ class AdminUserController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $currentUser = $request->user();
+        
+        // Define validation rules
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
-        ]);
+        ];
+        
+        // Only superadmins can assign roles
+        if ($currentUser->role === 'superadmin') {
+            $rules['role'] = ['required', Rule::in(['leader', 'admin'])];
+        }
+        
+        $validated = $request->validate($rules);
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'leader',
+            'role' => $currentUser->role === 'superadmin' && isset($validated['role']) 
+                ? $validated['role'] 
+                : 'leader',
             'status' => 'active',
         ]);
 
@@ -56,11 +78,18 @@ class AdminUserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
-        // Prevent editing other superadmins
+        $currentUser = $request->user();
+        
+        // Prevent editing superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot edit superadmin users.');
+        }
+        
+        // Admins cannot edit other admins
+        if ($currentUser->role === 'admin' && $user->role === 'admin') {
+            abort(403, 'Cannot edit other admin users.');
         }
 
         return view('admin.users.edit', compact('user'));
@@ -71,9 +100,16 @@ class AdminUserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // Prevent editing other superadmins
+        $currentUser = $request->user();
+        
+        // Prevent editing superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot edit superadmin users.');
+        }
+        
+        // Admins cannot edit other admins
+        if ($currentUser->role === 'admin' && $user->role === 'admin') {
+            abort(403, 'Cannot edit other admin users.');
         }
 
         $validated = $request->validate([
@@ -104,11 +140,28 @@ class AdminUserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        $currentUser = $request->user();
+        
         // Prevent deleting superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot delete superadmin users.');
+        }
+        
+        // Admins cannot delete other admins
+        if ($currentUser->role === 'admin' && $user->role === 'admin') {
+            abort(403, 'Cannot delete other admin users.');
+        }
+
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            abort(403, 'Cannot delete your own account.');
+        }
+
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            abort(403, 'Cannot delete your own account.');
         }
 
         // Prevent deleting yourself
