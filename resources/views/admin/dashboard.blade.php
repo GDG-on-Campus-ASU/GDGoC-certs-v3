@@ -83,6 +83,21 @@
                             <h4 class="font-semibold text-yellow-800">Documentation Manager</h4>
                             <p class="text-sm text-yellow-600">Manage help documentation pages</p>
                         </a>
+
+                        <a href="{{ route('admin.templates.email.index') }}" class="block p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
+                            <h4 class="font-semibold text-indigo-800">Email Templates</h4>
+                            <p class="text-sm text-indigo-600">Manage global email templates</p>
+                        </a>
+
+                        <a href="{{ route('admin.templates.certificates.index') }}" class="block p-4 bg-pink-50 hover:bg-pink-100 rounded-lg transition">
+                            <h4 class="font-semibold text-pink-800">Certificate Templates</h4>
+                            <p class="text-sm text-pink-600">Manage global certificate templates</p>
+                        </a>
+
+                        <a href="{{ route('admin.smtp.index') }}" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <h4 class="font-semibold text-gray-800">Global SMTP</h4>
+                            <p class="text-sm text-gray-600">Manage global SMTP providers</p>
+                        </a>
                     </div>
                 </div>
             </div>

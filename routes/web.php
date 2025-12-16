@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureUserIsAdminOrSuperadmin;
 use App\Http\Controllers\Admin\CertificateTemplateController as AdminCertificateTemplateController;
 use App\Http\Controllers\Admin\DocumentationController as AdminDocumentationController;
 use App\Http\Controllers\Admin\EmailTemplateController as AdminEmailTemplateController;
+use App\Http\Controllers\Admin\SmtpProviderController as AdminSmtpProviderController;
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\BulkCertificateController;
 use App\Http\Controllers\CertificateController;
@@ -93,6 +94,9 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                     // Template Management
                     Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
                     Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
+
+                    // Global SMTP Management
+                    Route::resource('smtp', AdminSmtpProviderController::class)->names('smtp');
 
                     // OIDC Settings
                     Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
@@ -200,6 +204,9 @@ Route::middleware(['auth', 'org_name', 'admin_or_superadmin'])->prefix('admin')-
         // Template Management
         Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
         Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
+
+            // Global SMTP Management
+            Route::resource('smtp', AdminSmtpProviderController::class)->names('smtp');
 
         // OIDC Settings
         Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');

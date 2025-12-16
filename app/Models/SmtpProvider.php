@@ -17,6 +17,7 @@ class SmtpProvider extends Model
         'encryption',
         'from_address',
         'from_name',
+        'is_global',
     ];
 
     protected $hidden = [
