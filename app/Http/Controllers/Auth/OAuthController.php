@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\OidcSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OAuthController extends Controller
@@ -75,15 +78,108 @@ class OAuthController extends Controller
             return redirect()->route('login')->with('error', 'Invalid state parameter. Please try again.');
         }
 
-        // TODO: Implement token exchange and user authentication
-        // This is a placeholder for the full OAuth/OIDC callback flow
-        // In a complete implementation, you would:
-        // 1. Exchange the authorization code for tokens
-        // 2. Validate the ID token
-        // 3. Fetch user info
-        // 4. Create or update the user
-        // 5. Log them in
+        // Check for error in callback
+        if ($request->has('error')) {
+            return redirect()->route('login')->with('error', 'OIDC Error: ' . $request->error_description ?? $request->error);
+        }
 
-        return redirect()->route('login')->with('error', 'SSO callback handling is not fully implemented yet.');
+        try {
+            // 1. Exchange the authorization code for tokens
+            $tokenResponse = Http::asForm()->post($settings->token_endpoint_url, [
+                'grant_type' => 'authorization_code',
+                'client_id' => $settings->client_id,
+                'client_secret' => $settings->client_secret,
+                'redirect_uri' => route('oauth.callback'),
+                'code' => $request->code,
+            ]);
+
+            if (!$tokenResponse->successful()) {
+                Log::error('OIDC Token Exchange Failed', ['response' => $tokenResponse->body()]);
+                return redirect()->route('login')->with('error', 'Failed to exchange authentication code for token.');
+            }
+
+            $tokens = $tokenResponse->json();
+            $accessToken = $tokens['access_token'] ?? null;
+            // $idToken = $tokens['id_token'] ?? null; // We could validate this if we had JWKS
+
+            if (!$accessToken) {
+                return redirect()->route('login')->with('error', 'No access token received from OIDC provider.');
+            }
+
+            // 2. Fetch user info
+            $userInfoResponse = Http::withToken($accessToken)->get($settings->userinfo_endpoint_url);
+
+            if (!$userInfoResponse->successful()) {
+                Log::error('OIDC User Info Fetch Failed', ['response' => $userInfoResponse->body()]);
+                return redirect()->route('login')->with('error', 'Failed to fetch user information.');
+            }
+
+            $userInfo = $userInfoResponse->json();
+
+            // Determine the unique user identifier
+            $identifierKey = $settings->identity_key ?? 'email';
+            $userIdentifier = $userInfo[$identifierKey] ?? null;
+
+            if (!$userIdentifier) {
+                return redirect()->route('login')->with('error', "User identifier field '{$identifierKey}' is missing in the user info response.");
+            }
+
+            // 3. Find or Create User
+            // First check if a user with this oauth_id exists
+            $user = User::where('oauth_provider', 'oidc')
+                        ->where('oauth_id', $userInfo['sub'] ?? $userIdentifier)
+                        ->first();
+
+            if (!$user) {
+                // If not found by oauth_id, check by email if linking is enabled
+                if ($settings->link_existing_users && isset($userInfo['email'])) {
+                    $user = User::where('email', $userInfo['email'])->first();
+
+                    if ($user) {
+                        // Link the existing user
+                        $user->oauth_provider = 'oidc';
+                        $user->oauth_id = $userInfo['sub'] ?? $userIdentifier;
+                        $user->save();
+                    }
+                }
+            }
+
+            if (!$user) {
+                // If user still not found, check if we can create a new one
+                if ($settings->create_new_users) {
+                    $email = $userInfo['email'] ?? null;
+                    if (!$email) {
+                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
+                    }
+
+                    $user = User::create([
+                        'name' => $userInfo['name'] ?? $userInfo['preferred_username'] ?? explode('@', $email)[0],
+                        'email' => $email,
+                        'password' => bcrypt(Str::random(32)), // Random password since they use SSO
+                        'oauth_provider' => 'oidc',
+                        'oauth_id' => $userInfo['sub'] ?? $userIdentifier,
+                        'status' => 'active', // Default status
+                    ]);
+                } else {
+                    return redirect()->route('login')->with('error', 'User account not found and automatic creation is disabled.');
+                }
+            }
+
+            if ($user->status !== 'active') {
+                 return redirect()->route('login')->with('error', 'Your account is currently inactive.');
+            }
+
+            // 4. Log them in
+            Auth::login($user);
+
+            // Clean up session
+            $request->session()->forget(['oauth_state', 'oauth_nonce']);
+
+            return redirect()->intended(route('dashboard'));
+
+        } catch (\Exception $e) {
+            Log::error('OIDC Callback Exception', ['exception' => $e]);
+            return redirect()->route('login')->with('error', 'An error occurred during authentication.');
+        }
     }
 }
