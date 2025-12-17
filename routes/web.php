@@ -48,11 +48,13 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
         // Leader Routes - Protected by auth middleware
         Route::prefix('dashboard')->name('dashboard.')->group(function () {
             // Certificate Templates
+            Route::post('/templates/certificates/preview', [CertificateTemplateController::class, 'preview'])->name('templates.certificates.preview');
             Route::post('/templates/certificates/{certificateTemplate}/clone', [CertificateTemplateController::class, 'clone'])->name('templates.certificates.clone');
             Route::post('/templates/certificates/{certificateTemplate}/reset', [CertificateTemplateController::class, 'reset'])->name('templates.certificates.reset');
             Route::resource('templates/certificates', CertificateTemplateController::class)->names('templates.certificates');
 
             // Email Templates
+            Route::post('/templates/email/preview', [EmailTemplateController::class, 'preview'])->name('templates.email.preview');
             Route::post('/templates/email/{emailTemplate}/clone', [EmailTemplateController::class, 'clone'])->name('templates.email.clone');
             Route::post('/templates/email/{emailTemplate}/reset', [EmailTemplateController::class, 'reset'])->name('templates.email.reset');
             Route::resource('templates/email', EmailTemplateController::class)->names('templates.email');
@@ -158,11 +160,13 @@ Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.
 // Leader Routes - Protected by auth middleware (non-domain fallback)
 Route::middleware(['auth', 'org_name'])->prefix('dashboard')->name('dashboard.')->group(function () {
     // Certificate Templates
+    Route::post('/templates/certificates/preview', [CertificateTemplateController::class, 'preview'])->name('templates.certificates.preview');
     Route::post('/templates/certificates/{certificateTemplate}/clone', [CertificateTemplateController::class, 'clone'])->name('templates.certificates.clone');
     Route::post('/templates/certificates/{certificateTemplate}/reset', [CertificateTemplateController::class, 'reset'])->name('templates.certificates.reset');
     Route::resource('templates/certificates', CertificateTemplateController::class)->names('templates.certificates');
 
     // Email Templates
+    Route::post('/templates/email/preview', [EmailTemplateController::class, 'preview'])->name('templates.email.preview');
     Route::post('/templates/email/{emailTemplate}/clone', [EmailTemplateController::class, 'clone'])->name('templates.email.clone');
     Route::post('/templates/email/{emailTemplate}/reset', [EmailTemplateController::class, 'reset'])->name('templates.email.reset');
     Route::resource('templates/email', EmailTemplateController::class)->names('templates.email');

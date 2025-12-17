@@ -10,6 +10,40 @@ use Illuminate\Validation\Rule;
 class CertificateTemplateController extends Controller
 {
     /**
+     * Preview the certificate template.
+     */
+    public function preview(Request $request)
+    {
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
+            'type' => ['required', Rule::in(['svg', 'blade'])],
+        ]);
+
+        $replacements = [
+            'Recipient_Name' => 'John Doe',
+            'Event_Title' => 'Certificate Award Ceremony',
+            'Org_Name' => 'GDG on Campus',
+            'state' => 'New York',
+            'event_type' => 'Workshop',
+            'issue_date' => now()->toFormattedDateString(),
+            'issuer_name' => 'Jane Smith',
+            'unique_id' => '123e4567-e89b-12d3-a456-426614174000',
+        ];
+
+        $content = $validated['content'];
+
+        foreach ($replacements as $key => $value) {
+            // Replace {{ $key }} and {{ $key }} and {{$key}}
+            $content = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $content);
+        }
+
+        return response()->json([
+            'content' => $content,
+            'type' => $validated['type'],
+        ]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
