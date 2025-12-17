@@ -25,6 +25,7 @@ class OAuthTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'login_endpoint_url' => 'https://example.com/oauth/authorize',
+            'token_endpoint_url' => 'https://example.com/oauth/token',
             'userinfo_endpoint_url' => 'https://example.com/oauth/userinfo',
             'scope' => 'openid profile email',
         ]);
@@ -50,6 +51,7 @@ class OAuthTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'login_endpoint_url' => 'https://example.com/oauth/authorize',
+            'token_endpoint_url' => 'https://example.com/oauth/token',
             'userinfo_endpoint_url' => 'https://example.com/oauth/userinfo',
             'scope' => 'openid profile email',
         ]);

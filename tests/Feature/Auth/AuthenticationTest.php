@@ -67,6 +67,7 @@ class AuthenticationTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-secret',
             'login_endpoint_url' => 'https://example.com/auth',
+            'token_endpoint_url' => 'https://example.com/token',
             'userinfo_endpoint_url' => 'https://example.com/userinfo',
         ]);
 

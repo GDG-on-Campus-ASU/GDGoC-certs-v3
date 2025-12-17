@@ -80,7 +80,7 @@ class OAuthController extends Controller
 
         // Check for error in callback
         if ($request->has('error')) {
-            return redirect()->route('login')->with('error', 'OIDC Error: ' . $request->error_description ?? $request->error);
+            return redirect()->route('login')->with('error', 'OIDC Error: ' . ($request->error_description ?? $request->error));
         }
 
         try {
@@ -100,13 +100,36 @@ class OAuthController extends Controller
 
             $tokens = $tokenResponse->json();
             $accessToken = $tokens['access_token'] ?? null;
-            // $idToken = $tokens['id_token'] ?? null; // We could validate this if we had JWKS
+            $idToken = $tokens['id_token'] ?? null;
 
             if (!$accessToken) {
                 return redirect()->route('login')->with('error', 'No access token received from OIDC provider.');
             }
 
-            // 2. Fetch user info
+            // 2. Validate ID Token (Basic Audience Check)
+            if ($idToken) {
+                $parts = explode('.', $idToken);
+                if (count($parts) === 3) {
+                    $payload = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', $parts[1]))), true);
+                    if ($payload) {
+                        $aud = $payload['aud'] ?? null;
+                        // aud can be a string or an array
+                        $isValidAud = false;
+                        if (is_string($aud) && $aud === $settings->client_id) {
+                            $isValidAud = true;
+                        } elseif (is_array($aud) && in_array($settings->client_id, $aud)) {
+                            $isValidAud = true;
+                        }
+
+                        if (!$isValidAud) {
+                             Log::warning('OIDC ID Token Audience Mismatch', ['aud' => $aud, 'expected' => $settings->client_id]);
+                             // We don't block here as we rely on UserInfo, but logging is good practice
+                        }
+                    }
+                }
+            }
+
+            // 3. Fetch user info
             $userInfoResponse = Http::withToken($accessToken)->get($settings->userinfo_endpoint_url);
 
             if (!$userInfoResponse->successful()) {
