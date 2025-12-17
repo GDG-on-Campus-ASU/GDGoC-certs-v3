@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public validation page (certs.gdg-oncampus.dev) - accessible via configured public domain
 Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
+    ->middleware('throttle:60,1')
     ->group(function () {
         Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index.domain');
         Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.domain');
@@ -221,7 +222,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('dashboard')->name('dashboard.
 });
 
 // Public Certificate Validation Routes - Non-domain fallback (accessible from any domain)
-Route::prefix('public')->group(function () {
+Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index');
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show');
@@ -231,7 +232,7 @@ Route::prefix('public')->group(function () {
 // Public Certificate Validation Routes - Legacy domain-based routes
 // Note: Uses VALIDATION_DOMAIN env variable (deprecated) for backward compatibility with older configs
 // Newer configs should use DOMAIN_PUBLIC instead
-Route::domain(config('domains.validation'))->group(function () {
+Route::domain(config('domains.validation'))->middleware('throttle:60,1')->group(function () {
     Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index.legacy');
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.legacy');
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.legacy');
