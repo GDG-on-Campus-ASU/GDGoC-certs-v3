@@ -42,8 +42,7 @@ class SmtpProviderController extends Controller
             'from_name' => ['required', 'string', 'max:255'],
         ]);
 
-        // Encrypt the password
-        $validated['password'] = Crypt::encryptString($validated['password']);
+        // Password encryption is handled by the model mutator
         $validated['user_id'] = auth()->id();
 
         SmtpProvider::create($validated);
@@ -87,9 +86,7 @@ class SmtpProviderController extends Controller
         ]);
 
         // Only update password if provided
-        if (! empty($validated['password'])) {
-            $validated['password'] = Crypt::encryptString($validated['password']);
-        } else {
+        if (empty($validated['password'])) {
             unset($validated['password']);
         }
 

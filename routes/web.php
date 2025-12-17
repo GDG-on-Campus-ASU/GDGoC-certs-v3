@@ -95,9 +95,6 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                     Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
                     Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
-                    // Global SMTP Management
-                    Route::resource('smtp', AdminSmtpProviderController::class)->names('smtp');
-
                     // OIDC Settings
                     Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
                     Route::post('/settings/oidc', [AdminOidcController::class, 'update'])->name('oidc.update');
@@ -205,8 +202,8 @@ Route::middleware(['auth', 'org_name', 'admin_or_superadmin'])->prefix('admin')-
         Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
         Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
-            // Global SMTP Management
-            Route::resource('smtp', AdminSmtpProviderController::class)->names('smtp');
+        // Global SMTP Management
+        Route::resource('smtp', AdminSmtpProviderController::class)->names('smtp');
 
         // OIDC Settings
         Route::get('/settings/oidc', [AdminOidcController::class, 'edit'])->name('oidc.edit');
