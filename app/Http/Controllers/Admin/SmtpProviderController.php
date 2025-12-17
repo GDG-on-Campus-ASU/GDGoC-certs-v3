@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\SmtpProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -13,9 +14,15 @@ class SmtpProviderController extends Controller
      */
     public function index()
     {
-        $providers = auth()->user()->smtpProviders()->orderBy('created_at', 'desc')->get();
+        // For admin, we primarily want to manage global SMTP providers,
+        // but maybe we want to see all? Usually global managers manage global things.
+        // The user said "Global SMTP Manager".
+        $providers = SmtpProvider::with('user')
+            ->where('is_global', true)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
-        return view('dashboard.smtp.index', compact('providers'));
+        return view('admin.smtp.index', compact('providers'));
     }
 
     /**
@@ -23,7 +30,7 @@ class SmtpProviderController extends Controller
      */
     public function create()
     {
-        return view('dashboard.smtp.create');
+        return view('admin.smtp.create');
     }
 
     /**
@@ -40,40 +47,33 @@ class SmtpProviderController extends Controller
             'encryption' => ['required', 'string', 'in:tls,ssl,none'],
             'from_address' => ['required', 'email', 'max:255'],
             'from_name' => ['required', 'string', 'max:255'],
+            'is_global' => ['boolean'],
         ]);
 
         // Password encryption is handled by the model mutator
         $validated['user_id'] = auth()->id();
+        $validated['is_global'] = $request->boolean('is_global');
 
         SmtpProvider::create($validated);
 
-        return redirect()->route('dashboard.smtp.index')
-            ->with('success', 'SMTP provider added successfully.');
+        return redirect()->route('admin.smtp.index')
+            ->with('success', 'SMTP provider created successfully.');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SmtpProvider $smtpProvider)
+    public function edit(SmtpProvider $smtp)
     {
-        // Authorize that the user owns this SMTP provider
-        if ($smtpProvider->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        return view('dashboard.smtp.edit', compact('smtpProvider'));
+        // $smtp is the route parameter name, matched from resource
+        return view('admin.smtp.edit', compact('smtp'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SmtpProvider $smtpProvider)
+    public function update(Request $request, SmtpProvider $smtp)
     {
-        // Authorize that the user owns this SMTP provider
-        if ($smtpProvider->user_id !== auth()->id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'host' => ['required', 'string', 'max:255'],
@@ -83,6 +83,7 @@ class SmtpProviderController extends Controller
             'encryption' => ['required', 'string', 'in:tls,ssl,none'],
             'from_address' => ['required', 'email', 'max:255'],
             'from_name' => ['required', 'string', 'max:255'],
+            'is_global' => ['boolean'],
         ]);
 
         // Only update password if provided
@@ -90,25 +91,22 @@ class SmtpProviderController extends Controller
             unset($validated['password']);
         }
 
-        $smtpProvider->update($validated);
+        $validated['is_global'] = $request->boolean('is_global');
 
-        return redirect()->route('dashboard.smtp.index')
+        $smtp->update($validated);
+
+        return redirect()->route('admin.smtp.index')
             ->with('success', 'SMTP provider updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SmtpProvider $smtpProvider)
+    public function destroy(SmtpProvider $smtp)
     {
-        // Authorize that the user owns this SMTP provider
-        if ($smtpProvider->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $smtp->delete();
 
-        $smtpProvider->delete();
-
-        return redirect()->route('dashboard.smtp.index')
+        return redirect()->route('admin.smtp.index')
             ->with('success', 'SMTP provider deleted successfully.');
     }
 }
