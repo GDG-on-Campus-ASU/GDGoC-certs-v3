@@ -35,8 +35,13 @@ class CertificateService
             '{unique_id}' => $certificate->unique_id,
         ];
 
+        // Sanitize replacements to prevent XSS/PDF Injection
+        $sanitizedReplacements = array_map(function ($value) {
+            return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+        }, $replacements);
+
         // Replace variables in content
-        $html = str_replace(array_keys($replacements), array_values($replacements), $content);
+        $html = str_replace(array_keys($sanitizedReplacements), array_values($sanitizedReplacements), $content);
 
         // Generate the PDF
         $pdf = App::make('snappy.pdf.wrapper');
