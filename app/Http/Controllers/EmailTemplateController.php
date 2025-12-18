@@ -9,6 +9,42 @@ use Illuminate\Support\Facades\Gate;
 class EmailTemplateController extends Controller
 {
     /**
+     * Preview the email template.
+     */
+    public function preview(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => ['required', 'string'],
+            'body' => ['required', 'string'],
+        ]);
+
+        $replacements = [
+            'Recipient_Name' => 'John Doe',
+            'Event_Title' => 'Certificate Award Ceremony',
+            'Org_Name' => 'GDG on Campus',
+            'state' => 'New York',
+            'event_type' => 'Workshop',
+            'issue_date' => now()->toFormattedDateString(),
+            'issuer_name' => 'Jane Smith',
+            'unique_id' => '123e4567-e89b-12d3-a456-426614174000',
+        ];
+
+        $subject = $validated['subject'];
+        $body = $validated['body'];
+
+        foreach ($replacements as $key => $value) {
+            // Replace {{ $key }} and {{ $key }} and {{$key}}
+            $subject = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $subject);
+            $body = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $body);
+        }
+
+        return response()->json([
+            'subject' => $subject,
+            'body' => $body,
+        ]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
