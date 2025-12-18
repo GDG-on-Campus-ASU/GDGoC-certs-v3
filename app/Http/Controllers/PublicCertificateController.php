@@ -56,6 +56,11 @@ class PublicCertificateController extends Controller
 
         $pdfData = $certificateService->generate($certificate);
 
+        // Optimization: Cache the generated PDF for future requests
+        $filename = 'certificates/' . $certificate->unique_id . '.pdf';
+        \Illuminate\Support\Facades\Storage::put($filename, $pdfData);
+        $certificate->update(['file_path' => $filename]);
+
         return response($pdfData)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="certificate.pdf"');
