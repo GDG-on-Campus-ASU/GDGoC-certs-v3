@@ -107,8 +107,27 @@ class ProcessCertificateRow implements ShouldQueue
             'unique_id' => $certificate->unique_id,
         ];
 
-        $body = Blade::render($emailTemplate->body, $replacements);
-        $subject = Blade::render($emailTemplate->subject, $replacements);
+        // Securely replace variables in email body and subject
+        // We do NOT use Blade::render as it allows arbitrary PHP execution from user input
+        $body = $emailTemplate->body;
+        $subject = $emailTemplate->subject;
+
+        foreach ($replacements as $key => $value) {
+            // Support {{ Key }} and {{Key}} and {{ $Key }} formats
+            $search = [
+                '{{' . $key . '}}',
+                '{{ ' . $key . ' }}',
+                '{{$' . $key . '}}',
+                '{{ $' . $key . ' }}',
+            ];
+
+            // Escape the value to prevent HTML injection in the email body
+            // We use htmlspecialchars because the body is treated as HTML
+            $safeValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+
+            $body = str_replace($search, $safeValue, $body);
+            $subject = str_replace($search, $value, $subject); // Subject is plain text, but email headers handle it.
+        }
 
         // Send Email (only if recipient_email is provided)
         if ($certificate->recipient_email) {
