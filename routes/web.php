@@ -95,7 +95,10 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                 // Superadmin-only routes
                 Route::middleware(EnsureUserIsSuperadmin::class)->group(function () {
                     // Template Management
+                    Route::post('/templates/certificates/preview', [AdminCertificateTemplateController::class, 'preview'])->name('templates.certificates.preview');
                     Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
+
+                    Route::post('/templates/email/preview', [AdminEmailTemplateController::class, 'preview'])->name('templates.email.preview');
                     Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
                     // OIDC Settings
