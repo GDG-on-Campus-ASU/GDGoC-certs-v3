@@ -45,7 +45,10 @@ class CertificateService
 
         // Generate the PDF
         $pdf = App::make('snappy.pdf.wrapper');
-        $pdf->loadHTML($html)->setPaper('a4', 'landscape');
+        $pdf->loadHTML($html)
+            ->setPaper('a4', 'landscape')
+            ->setOption('disable-javascript', true)
+            ->setOption('disable-local-file-access', true);
 
         // Return the PDF binary
         return $pdf->output();
