@@ -20,6 +20,7 @@ class CertificatePdfInjectionTest extends TestCase
         // Mock the Snappy PDF wrapper to inspect the HTML content
         $pdfMock = Mockery::mock('stdClass');
         $pdfMock->shouldReceive('setPaper')->andReturnSelf();
+        $pdfMock->shouldReceive('setOption')->andReturnSelf(); // Allow setOption
         $pdfMock->shouldReceive('output')->andReturn('PDF_CONTENT');
 
         // We capture the arguments to verify them later
