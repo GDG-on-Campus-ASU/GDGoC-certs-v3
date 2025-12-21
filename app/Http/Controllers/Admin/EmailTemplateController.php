@@ -4,10 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
+use App\Services\TemplatePreviewService;
 use Illuminate\Http\Request;
 
 class EmailTemplateController extends Controller
 {
+    /**
+     * Preview the email template.
+     */
+    public function preview(Request $request, TemplatePreviewService $previewService)
+    {
+        $validated = $request->validate([
+            'subject' => ['required', 'string'],
+            'body' => ['required', 'string'],
+        ]);
+
+        $subject = $previewService->applyReplacements($validated['subject']);
+        $body = $previewService->applyReplacements($validated['body']);
+
+        return response()->json([
+            'subject' => $subject,
+            'body' => $body,
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */

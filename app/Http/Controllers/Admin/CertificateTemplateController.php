@@ -4,11 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CertificateTemplate;
+use App\Services\TemplatePreviewService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class CertificateTemplateController extends Controller
 {
+    /**
+     * Preview the certificate template.
+     */
+    public function preview(Request $request, TemplatePreviewService $previewService)
+    {
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
+            'type' => ['required', Rule::in(['svg', 'blade'])],
+        ]);
+
+        $content = $previewService->applyReplacements($validated['content']);
+
+        return response()->json([
+            'content' => $content,
+            'type' => $validated['type'],
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */
