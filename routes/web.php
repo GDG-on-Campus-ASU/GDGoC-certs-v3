@@ -20,6 +20,7 @@ use App\Http\Controllers\Leader\DashboardController as LeaderDashboardController
 use App\Http\Controllers\Leader\DocumentationController as LeaderDocumentationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCertificateController;
+use App\Http\Controllers\PublicTemplatePreviewController;
 use App\Http\Controllers\SmtpProviderController;
 use App\Http\Middleware\EnsureUserIsSuperadmin;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,10 @@ Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
         Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.domain');
         Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.domain');
         Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download.domain');
+
+        // Public Template Preview
+        Route::post('/preview/certificate', [PublicTemplatePreviewController::class, 'previewCertificate'])->name('public.preview.certificate.domain');
+        Route::post('/preview/email', [PublicTemplatePreviewController::class, 'previewEmail'])->name('public.preview.email.domain');
     });
 
 // Admin dashboard (sudo.certs-admin.certs.gdg-oncampus.dev)
@@ -238,6 +243,10 @@ Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show');
     Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download');
+
+    // Public Template Preview
+    Route::post('/preview/certificate', [PublicTemplatePreviewController::class, 'previewCertificate'])->name('public.preview.certificate');
+    Route::post('/preview/email', [PublicTemplatePreviewController::class, 'previewEmail'])->name('public.preview.email');
 });
 
 // Public Certificate Validation Routes - Legacy domain-based routes
