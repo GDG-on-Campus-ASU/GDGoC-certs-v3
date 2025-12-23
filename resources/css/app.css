@@ -91,3 +91,4 @@
     @apply my-6 border-t border-gray-300;
 }
 
+[x-cloak] { display: none !important; }
