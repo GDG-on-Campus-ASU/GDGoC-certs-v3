@@ -22,7 +22,7 @@ class PublicCertificateController extends Controller
     public function validate(Request $request)
     {
         $request->validate([
-            'unique_id' => 'required|string',
+            'unique_id' => 'required|string|uuid',
         ]);
 
         return redirect()->route('public.certificate.show', ['unique_id' => $request->unique_id]);

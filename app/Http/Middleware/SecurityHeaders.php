@@ -25,6 +25,10 @@ class SecurityHeaders
 
         // Control referrer information
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      
+        // Remove X-Powered-By if it exists (though usually handled by php.ini, it's good to be sure)
+        $response->headers->remove('X-Powered-By');
+
 
         return $response;
     }
