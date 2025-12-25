@@ -17,8 +17,8 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        // Prevent clickjacking: allow same origin (safer default than DENY)
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        // Prevent clickjacking: deny all framing
+        $response->headers->set('X-Frame-Options', 'DENY');
 
         // Prevent MIME sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
