@@ -21,12 +21,6 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-        $response->headers->set('X-Frame-Options', 'DENY');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-        // Remove X-Powered-By if it exists (though usually handled by php.ini, it's good to be sure)
-        $response->headers->remove('X-Powered-By');
 
         return $response;
     }
