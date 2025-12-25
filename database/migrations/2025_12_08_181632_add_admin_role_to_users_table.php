@@ -12,7 +12,7 @@ return new class extends Migration
     {
         // Get database driver for database-agnostic migrations
         $driver = DB::connection()->getDriverName();
-        
+
         if ($driver === 'sqlite') {
             // SQLite: Recreate table with updated constraint
             DB::statement('CREATE TABLE users_new (
@@ -36,10 +36,10 @@ return new class extends Migration
             DB::statement('ALTER TABLE users_new RENAME TO users');
         } else {
             // PostgreSQL and MySQL: Update constraint
-            DB::statement("ALTER TABLE users DROP CONSTRAINT IF EXISTS role_valid");
-            DB::statement("ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)");
+            DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS role_valid');
+            DB::statement('ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)');
             DB::statement("ALTER TABLE users ALTER COLUMN role SET DEFAULT 'leader'");
-            DB::statement("ALTER TABLE users ALTER COLUMN role SET NOT NULL");
+            DB::statement('ALTER TABLE users ALTER COLUMN role SET NOT NULL');
             DB::statement("ALTER TABLE users ADD CONSTRAINT role_valid CHECK (role IN ('leader', 'admin', 'superadmin'))");
         }
     }
@@ -51,7 +51,7 @@ return new class extends Migration
     {
         // Get database driver for database-agnostic migrations
         $driver = DB::connection()->getDriverName();
-        
+
         if ($driver === 'sqlite') {
             // SQLite: Recreate table with original constraint
             DB::statement('CREATE TABLE users_new (
@@ -75,10 +75,10 @@ return new class extends Migration
             DB::statement('ALTER TABLE users_new RENAME TO users');
         } else {
             // PostgreSQL and MySQL: Revert constraint
-            DB::statement("ALTER TABLE users DROP CONSTRAINT IF EXISTS role_valid");
-            DB::statement("ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)");
+            DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS role_valid');
+            DB::statement('ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)');
             DB::statement("ALTER TABLE users ALTER COLUMN role SET DEFAULT 'leader'");
-            DB::statement("ALTER TABLE users ALTER COLUMN role SET NOT NULL");
+            DB::statement('ALTER TABLE users ALTER COLUMN role SET NOT NULL');
             DB::statement("ALTER TABLE users ADD CONSTRAINT role_valid CHECK (role IN ('leader', 'superadmin'))");
         }
     }

@@ -20,7 +20,7 @@ class OAuthController extends Controller
     {
         $settings = OidcSetting::getConfigured();
 
-        if (!$settings) {
+        if (! $settings) {
             return redirect()->route('login')->with('error', 'SSO authentication is not configured.');
         }
 
@@ -48,15 +48,15 @@ class OAuthController extends Controller
         if (isset($parsedUrl['query'])) {
             parse_str($parsedUrl['query'], $existingParams);
         }
-        
+
         // Merge parameters (new params override existing ones)
         $allParams = array_merge($existingParams, $params);
-        
+
         // Reconstruct the URL
-        $authUrl = ($parsedUrl['scheme'] ?? 'https') . '://' . 
-                   ($parsedUrl['host'] ?? '') . 
-                   ($parsedUrl['path'] ?? '') . 
-                   '?' . http_build_query($allParams);
+        $authUrl = ($parsedUrl['scheme'] ?? 'https').'://'.
+                   ($parsedUrl['host'] ?? '').
+                   ($parsedUrl['path'] ?? '').
+                   '?'.http_build_query($allParams);
 
         return redirect($authUrl);
     }
@@ -68,7 +68,7 @@ class OAuthController extends Controller
     {
         $settings = OidcSetting::getConfigured();
 
-        if (!$settings) {
+        if (! $settings) {
             return redirect()->route('login')->with('error', 'SSO authentication is not configured.');
         }
 
@@ -99,8 +99,9 @@ class OAuthController extends Controller
                 'code' => $request->code,
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 Log::error('OIDC Token Exchange Failed', ['response' => $tokenResponse->body()]);
+
                 return redirect()->route('login')->with('error', 'Failed to exchange authentication code for token.');
             }
 
@@ -148,8 +149,9 @@ class OAuthController extends Controller
             // 3. Fetch user info
             $userInfoResponse = Http::withToken($accessToken)->get($settings->userinfo_endpoint_url);
 
-            if (!$userInfoResponse->successful()) {
+            if (! $userInfoResponse->successful()) {
                 Log::error('OIDC User Info Fetch Failed', ['response' => $userInfoResponse->body()]);
+
                 return redirect()->route('login')->with('error', 'Failed to fetch user information.');
             }
 
@@ -167,29 +169,43 @@ class OAuthController extends Controller
             // 3. Find or Create User
             // First check if a user with this oauth_id exists
             $user = User::where('oauth_provider', 'oidc')
-                        ->where('oauth_id', $userInfo['sub'] ?? $userIdentifier)
-                        ->first();
+                ->where('oauth_id', $userInfo['sub'] ?? $userIdentifier)
+                ->first();
 
-            if (!$user) {
+            if (! $user) {
                 // If not found by oauth_id, check by email if linking is enabled
                 if ($settings->link_existing_users && isset($userInfo['email'])) {
-                    $user = User::where('email', $userInfo['email'])->first();
+                    $existingUser = User::where('email', $userInfo['email'])->first();
 
-                    if ($user) {
-                        // Link the existing user
-                        $user->oauth_provider = 'oidc';
-                        $user->oauth_id = $userInfo['sub'] ?? $userIdentifier;
-                        $user->save();
+                    if ($existingUser) {
+                        // Check if email is verified by the OIDC provider
+                        $emailVerified = false;
+                        if (isset($userInfo['email_verified'])) {
+                            $emailVerified = filter_var($userInfo['email_verified'], FILTER_VALIDATE_BOOLEAN);
+                        }
+
+                        if ($emailVerified) {
+                            $user = $existingUser;
+                            // Link the existing user
+                            $user->oauth_provider = 'oidc';
+                            $user->oauth_id = $userInfo['sub'] ?? $userIdentifier;
+                            $user->save();
+                        } else {
+                            // Email account exists but OIDC email is not verified.
+                            // We MUST NOT continue to create a user with this email as it would fail unique constraint.
+                            Log::warning('OIDC Account Linking skipped: Email not verified by provider.', ['email' => $userInfo['email']]);
+                            return redirect()->route('login')->with('error', 'Email account exists but OIDC email is not verified.');
+                        }
                     }
                 }
             }
 
-            if (!$user) {
+            if (! $user) {
                 // If user still not found, check if we can create a new one
                 if ($settings->create_new_users) {
                     $email = $userInfo['email'] ?? null;
-                    if (!$email) {
-                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
+                    if (! $email) {
+                        return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
                     }
 
                     // Create user
@@ -208,7 +224,7 @@ class OAuthController extends Controller
             }
 
             if ($user->status !== 'active') {
-                 return redirect()->route('login')->with('error', 'Your account is currently inactive.');
+                return redirect()->route('login')->with('error', 'Your account is currently inactive.');
             }
 
             // 4. Log them in
@@ -223,6 +239,7 @@ class OAuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error('OIDC Callback Exception', ['exception' => $e]);
+
             return redirect()->route('login')->with('error', 'An error occurred during authentication.');
         }
     }

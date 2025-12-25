@@ -6,8 +6,8 @@ use App\Models\OidcSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Tests\TestCase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class OAuthControllerTest extends TestCase
 {
@@ -60,6 +60,7 @@ class OAuthControllerTest extends TestCase
                 'name' => 'Test OIDC User',
                 'email' => 'oidc@example.com',
                 'preferred_username' => 'oidcuser',
+                'email_verified' => true,
             ], 200),
         ]);
 
@@ -100,6 +101,7 @@ class OAuthControllerTest extends TestCase
                 'sub' => 'oidc-user-456',
                 'name' => 'Existing User',
                 'email' => 'existing@example.com',
+                'email_verified' => true,
             ], 200),
         ]);
 
@@ -121,7 +123,7 @@ class OAuthControllerTest extends TestCase
 
     public function test_callback_handles_errors()
     {
-         // Mock OIDC provider token failure
+        // Mock OIDC provider token failure
         Http::fake([
             'https://oidc.example.com/token' => Http::response(['error' => 'invalid_grant'], 400),
         ]);

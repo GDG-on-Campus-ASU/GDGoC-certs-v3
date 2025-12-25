@@ -6,11 +6,10 @@ use App\Models\Certificate;
 use App\Models\CertificateTemplate;
 use App\Models\User;
 use App\Services\CertificateService;
-use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class WkhtmltopdfSecurityTest extends TestCase
 {
@@ -60,7 +59,7 @@ class WkhtmltopdfSecurityTest extends TestCase
         ]);
 
         // Run the service
-        $service = new CertificateService();
+        $service = new CertificateService;
         $service->generate($certificate);
     }
 }

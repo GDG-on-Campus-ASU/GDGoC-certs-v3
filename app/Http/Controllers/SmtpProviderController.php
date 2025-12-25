@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\SmtpProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 
 class SmtpProviderController extends Controller
 {

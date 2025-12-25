@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminLoginLogController;
 use App\Http\Controllers\Admin\AdminOidcController;
 use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Middleware\EnsureUserIsAdminOrSuperadmin;
 use App\Http\Controllers\Admin\CertificateTemplateController as AdminCertificateTemplateController;
 use App\Http\Controllers\Admin\DocumentationController as AdminDocumentationController;
 use App\Http\Controllers\Admin\EmailTemplateController as AdminEmailTemplateController;
@@ -21,6 +20,7 @@ use App\Http\Controllers\Leader\DocumentationController as LeaderDocumentationCo
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCertificateController;
 use App\Http\Controllers\SmtpProviderController;
+use App\Http\Middleware\EnsureUserIsAdminOrSuperadmin;
 use App\Http\Middleware\EnsureUserIsSuperadmin;
 use Illuminate\Support\Facades\Route;
 
@@ -246,5 +246,3 @@ Route::domain(config('domains.validation'))->middleware('throttle:60,1')->group(
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.legacy');
     Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download.legacy');
 });
-
-

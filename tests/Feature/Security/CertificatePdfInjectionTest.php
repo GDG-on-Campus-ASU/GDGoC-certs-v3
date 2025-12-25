@@ -7,9 +7,9 @@ use App\Models\CertificateTemplate;
 use App\Models\User;
 use App\Services\CertificateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use Mockery;
 use Illuminate\Support\Facades\App;
+use Mockery;
+use Tests\TestCase;
 
 class CertificatePdfInjectionTest extends TestCase
 {
@@ -54,12 +54,12 @@ class CertificatePdfInjectionTest extends TestCase
             'org_name' => 'Org',
         ]);
 
-        $service = new CertificateService();
+        $service = new CertificateService;
         $service->generate($certificate);
 
         // Assertions
-        $this->assertNotNull($capturedHtml, "loadHTML should have been called");
-        $this->assertStringNotContainsString('<script>alert("XSS")</script>', $capturedHtml, "HTML should not contain unescaped script tags");
-        $this->assertStringContainsString('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;', $capturedHtml, "HTML should contain escaped script tags");
+        $this->assertNotNull($capturedHtml, 'loadHTML should have been called');
+        $this->assertStringNotContainsString('<script>alert("XSS")</script>', $capturedHtml, 'HTML should not contain unescaped script tags');
+        $this->assertStringContainsString('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;', $capturedHtml, 'HTML should contain escaped script tags');
     }
 }
