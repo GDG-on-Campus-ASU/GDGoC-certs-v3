@@ -22,7 +22,7 @@ class LinkAccessibilityTest extends TestCase
         // Retrieve the superadmin user created by DatabaseSeeder
         $this->user = User::where('email', 'admin@example.com')->first();
 
-        if (!$this->user) {
+        if (! $this->user) {
             $this->fail('Superadmin user not found. Ensure DatabaseSeeder creates a user with email admin@example.com');
         }
     }
@@ -56,15 +56,15 @@ class LinkAccessibilityTest extends TestCase
 
             // Debug: Dump content on failure to see the actual error in CI logs
             if ($response->status() !== 200) {
-                echo "\nFailed URL: " . $url . "\n";
-                echo "Status Code: " . $response->status() . "\n";
-                echo "Response Content:\n" . substr($response->getContent(), 0, 2000) . "\n"; // Limit output
+                echo "\nFailed URL: ".$url."\n";
+                echo 'Status Code: '.$response->status()."\n";
+                echo "Response Content:\n".substr($response->getContent(), 0, 2000)."\n"; // Limit output
             }
 
-            // Check for 200 OK. 
-            // Note: Some pages might redirect if not properly set up, but for a superadmin 
-            // on index pages, we generally expect 200. 
-            // If some redirect (e.g. to a setup page), 302 might be acceptable, 
+            // Check for 200 OK.
+            // Note: Some pages might redirect if not properly set up, but for a superadmin
+            // on index pages, we generally expect 200.
+            // If some redirect (e.g. to a setup page), 302 might be acceptable,
             // but for "accessibility" 200 is the gold standard for index pages.
             $response->assertStatus(200);
         }

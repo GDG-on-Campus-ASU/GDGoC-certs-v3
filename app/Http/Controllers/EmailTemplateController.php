@@ -34,8 +34,8 @@ class EmailTemplateController extends Controller
 
         foreach ($replacements as $key => $value) {
             // Replace {{ $key }} and {{ $key }} and {{$key}}
-            $subject = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $subject);
-            $body = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $body);
+            $subject = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $subject);
+            $body = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $body);
         }
 
         return response()->json([
@@ -51,8 +51,12 @@ class EmailTemplateController extends Controller
     {
         Gate::authorize('viewAny', EmailTemplate::class);
 
-        $userTemplates = auth()->user()->emailTemplates;
-        $globalTemplates = EmailTemplate::where('is_global', true)->get();
+        $userTemplates = auth()->user()->emailTemplates()
+            ->select('id', 'user_id', 'name', 'subject', 'created_at', 'original_template_id')
+            ->get();
+        $globalTemplates = EmailTemplate::where('is_global', true)
+            ->select('id', 'name', 'subject', 'created_at')
+            ->get();
 
         return view('dashboard.templates.email.index', compact('userTemplates', 'globalTemplates'));
     }

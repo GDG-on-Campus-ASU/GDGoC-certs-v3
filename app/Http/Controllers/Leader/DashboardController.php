@@ -15,12 +15,12 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
+
         // Optimize certificate statistics by aggregating in a single query
         $certificateStats = Certificate::where('user_id', $user->id)
             ->selectRaw('count(*) as total')
             ->selectRaw("count(case when status = 'issued' then 1 end) as active")
-            ->selectRaw("count(case when recipient_email is not null then 1 end) as emails_sent")
+            ->selectRaw('count(case when recipient_email is not null then 1 end) as emails_sent')
             ->selectRaw("count(case when status = 'revoked' then 1 end) as revoked")
             ->first();
 

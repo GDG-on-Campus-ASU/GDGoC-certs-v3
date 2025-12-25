@@ -39,12 +39,12 @@ class DocumentationController extends Controller
         ]);
 
         $slug = Str::slug($validated['title']);
-        
+
         // Check if slug exists and find the highest counter if needed
         $existingSlugs = DocumentationPage::where('slug', 'like', $slug.'%')
             ->pluck('slug')
             ->toArray();
-        
+
         if (in_array($slug, $existingSlugs)) {
             // Find the highest counter value
             $maxCounter = 0;
@@ -92,13 +92,13 @@ class DocumentationController extends Controller
         ]);
 
         $slug = Str::slug($validated['title']);
-        
+
         // Check if slug exists and find the highest counter if needed (excluding current page)
         $existingSlugs = DocumentationPage::where('id', '!=', $documentation->id)
             ->where('slug', 'like', $slug.'%')
             ->pluck('slug')
             ->toArray();
-        
+
         if (in_array($slug, $existingSlugs)) {
             // Find the highest counter value
             $maxCounter = 0;
