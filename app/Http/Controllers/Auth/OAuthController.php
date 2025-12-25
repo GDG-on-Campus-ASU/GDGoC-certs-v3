@@ -20,7 +20,7 @@ class OAuthController extends Controller
     {
         $settings = OidcSetting::getConfigured();
 
-        if (!$settings) {
+        if (! $settings) {
             return redirect()->route('login')->with('error', 'SSO authentication is not configured.');
         }
 
@@ -48,15 +48,15 @@ class OAuthController extends Controller
         if (isset($parsedUrl['query'])) {
             parse_str($parsedUrl['query'], $existingParams);
         }
-        
+
         // Merge parameters (new params override existing ones)
         $allParams = array_merge($existingParams, $params);
-        
+
         // Reconstruct the URL
-        $authUrl = ($parsedUrl['scheme'] ?? 'https') . '://' . 
-                   ($parsedUrl['host'] ?? '') . 
-                   ($parsedUrl['path'] ?? '') . 
-                   '?' . http_build_query($allParams);
+        $authUrl = ($parsedUrl['scheme'] ?? 'https').'://'.
+                   ($parsedUrl['host'] ?? '').
+                   ($parsedUrl['path'] ?? '').
+                   '?'.http_build_query($allParams);
 
         return redirect($authUrl);
     }
@@ -68,19 +68,19 @@ class OAuthController extends Controller
     {
         $settings = OidcSetting::getConfigured();
 
-        if (!$settings) {
+        if (! $settings) {
             return redirect()->route('login')->with('error', 'SSO authentication is not configured.');
         }
 
         // Verify state parameter using hash_equals to prevent timing attacks
         $sessionState = $request->session()->get('oauth_state');
-        if (!$sessionState || !hash_equals($sessionState, $request->state ?? '')) {
+        if (! $sessionState || ! hash_equals($sessionState, $request->state ?? '')) {
             return redirect()->route('login')->with('error', 'Invalid state parameter. Please try again.');
         }
 
         // Check for error in callback
         if ($request->has('error')) {
-            return redirect()->route('login')->with('error', 'OIDC Error: ' . ($request->error_description ?? $request->error));
+            return redirect()->route('login')->with('error', 'OIDC Error: '.($request->error_description ?? $request->error));
         }
 
         try {
@@ -93,8 +93,9 @@ class OAuthController extends Controller
                 'code' => $request->code,
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 Log::error('OIDC Token Exchange Failed', ['response' => $tokenResponse->body()]);
+
                 return redirect()->route('login')->with('error', 'Failed to exchange authentication code for token.');
             }
 
@@ -102,7 +103,7 @@ class OAuthController extends Controller
             $accessToken = $tokens['access_token'] ?? null;
             $idToken = $tokens['id_token'] ?? null;
 
-            if (!$accessToken) {
+            if (! $accessToken) {
                 return redirect()->route('login')->with('error', 'No access token received from OIDC provider.');
             }
 
@@ -121,9 +122,9 @@ class OAuthController extends Controller
                             $isValidAud = true;
                         }
 
-                        if (!$isValidAud) {
-                             Log::warning('OIDC ID Token Audience Mismatch', ['aud' => $aud, 'expected' => $settings->client_id]);
-                             // We don't block here as we rely on UserInfo, but logging is good practice
+                        if (! $isValidAud) {
+                            Log::warning('OIDC ID Token Audience Mismatch', ['aud' => $aud, 'expected' => $settings->client_id]);
+                            // We don't block here as we rely on UserInfo, but logging is good practice
                         }
                     }
                 }
@@ -132,8 +133,9 @@ class OAuthController extends Controller
             // 3. Fetch user info
             $userInfoResponse = Http::withToken($accessToken)->get($settings->userinfo_endpoint_url);
 
-            if (!$userInfoResponse->successful()) {
+            if (! $userInfoResponse->successful()) {
                 Log::error('OIDC User Info Fetch Failed', ['response' => $userInfoResponse->body()]);
+
                 return redirect()->route('login')->with('error', 'Failed to fetch user information.');
             }
 
@@ -143,17 +145,17 @@ class OAuthController extends Controller
             $identifierKey = $settings->identity_key ?? 'email';
             $userIdentifier = $userInfo[$identifierKey] ?? null;
 
-            if (!$userIdentifier) {
+            if (! $userIdentifier) {
                 return redirect()->route('login')->with('error', "User identifier field '{$identifierKey}' is missing in the user info response.");
             }
 
             // 3. Find or Create User
             // First check if a user with this oauth_id exists
             $user = User::where('oauth_provider', 'oidc')
-                        ->where('oauth_id', $userInfo['sub'] ?? $userIdentifier)
-                        ->first();
+                ->where('oauth_id', $userInfo['sub'] ?? $userIdentifier)
+                ->first();
 
-            if (!$user) {
+            if (! $user) {
                 // If not found by oauth_id, check by email if linking is enabled
                 if ($settings->link_existing_users && isset($userInfo['email'])) {
                     $existingUser = User::where('email', $userInfo['email'])->first();
@@ -181,12 +183,12 @@ class OAuthController extends Controller
                 }
             }
 
-            if (!$user) {
+            if (! $user) {
                 // If user still not found, check if we can create a new one
                 if ($settings->create_new_users) {
                     $email = $userInfo['email'] ?? null;
-                    if (!$email) {
-                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
+                    if (! $email) {
+                        return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
                     }
 
                     $user = User::create([
@@ -203,7 +205,7 @@ class OAuthController extends Controller
             }
 
             if ($user->status !== 'active') {
-                 return redirect()->route('login')->with('error', 'Your account is currently inactive.');
+                return redirect()->route('login')->with('error', 'Your account is currently inactive.');
             }
 
             // 4. Log them in
@@ -216,6 +218,7 @@ class OAuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error('OIDC Callback Exception', ['exception' => $e]);
+
             return redirect()->route('login')->with('error', 'An error occurred during authentication.');
         }
     }

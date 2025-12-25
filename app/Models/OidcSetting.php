@@ -48,11 +48,11 @@ class OidcSetting extends Model
      */
     public function isConfigured(): bool
     {
-        return !empty($this->client_id) 
-            && !empty($this->client_secret) 
-            && !empty($this->login_endpoint_url)
-            && !empty($this->token_endpoint_url)
-            && !empty($this->userinfo_endpoint_url);
+        return ! empty($this->client_id)
+            && ! empty($this->client_secret)
+            && ! empty($this->login_endpoint_url)
+            && ! empty($this->token_endpoint_url)
+            && ! empty($this->userinfo_endpoint_url);
     }
 
     /**
@@ -61,11 +61,11 @@ class OidcSetting extends Model
     public static function getConfigured(): ?self
     {
         $settings = self::first();
-        
+
         if ($settings && $settings->isConfigured()) {
             return $settings;
         }
-        
+
         return null;
     }
 }

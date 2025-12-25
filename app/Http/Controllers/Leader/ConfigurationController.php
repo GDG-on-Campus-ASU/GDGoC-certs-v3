@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
-use App\Models\SmtpProvider;
-use App\Models\EmailTemplate;
 use App\Models\CertificateTemplate;
+use App\Models\EmailTemplate;
 
 class ConfigurationController extends Controller
 {

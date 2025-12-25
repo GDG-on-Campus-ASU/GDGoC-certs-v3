@@ -4,7 +4,6 @@ namespace Tests\Feature\Leader;
 
 use App\Models\Certificate;
 use App\Models\CertificateTemplate;
-use App\Models\EmailTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -36,7 +35,7 @@ class LeaderDashboardTest extends TestCase
 
         // Create test data
         $template = CertificateTemplate::factory()->create(['user_id' => $user->id]);
-        
+
         // Create 3 issued certificates
         Certificate::factory()->count(3)->create([
             'user_id' => $user->id,
@@ -56,9 +55,9 @@ class LeaderDashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        
+
         $stats = $response->viewData('stats');
-        
+
         $this->assertEquals(5, $stats['total_certificates']);
         $this->assertEquals(3, $stats['active_certificates']);
         $this->assertEquals(5, $stats['emails_sent']);

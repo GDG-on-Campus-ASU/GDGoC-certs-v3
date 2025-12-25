@@ -60,10 +60,10 @@ class CertificateService
     public function store(Certificate $certificate): string
     {
         $pdfContent = $this->generate($certificate);
-        $filename = 'certificates/' . $certificate->unique_id . '.pdf';
-        
+        $filename = 'certificates/'.$certificate->unique_id.'.pdf';
+
         \Illuminate\Support\Facades\Storage::put($filename, $pdfContent);
-        
+
         return $filename;
     }
 }

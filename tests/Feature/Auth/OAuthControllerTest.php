@@ -6,8 +6,8 @@ use App\Models\OidcSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Tests\TestCase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class OAuthControllerTest extends TestCase
 {
@@ -123,7 +123,7 @@ class OAuthControllerTest extends TestCase
 
     public function test_callback_handles_errors()
     {
-         // Mock OIDC provider token failure
+        // Mock OIDC provider token failure
         Http::fake([
             'https://oidc.example.com/token' => Http::response(['error' => 'invalid_grant'], 400),
         ]);

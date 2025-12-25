@@ -66,7 +66,7 @@ class ProcessCertificateRow implements ShouldQueue
         $pdfData = $certificateService->generate($certificate);
 
         // Store PDF
-        $path = 'certificates/' . $certificate->unique_id . '.pdf';
+        $path = 'certificates/'.$certificate->unique_id.'.pdf';
         \Illuminate\Support\Facades\Storage::put($path, $pdfData);
         $certificate->update(['file_path' => $path]);
 
@@ -115,10 +115,10 @@ class ProcessCertificateRow implements ShouldQueue
         foreach ($replacements as $key => $value) {
             // Support {{ Key }} and {{Key}} and {{ $Key }} formats
             $search = [
-                '{{' . $key . '}}',
-                '{{ ' . $key . ' }}',
-                '{{$' . $key . '}}',
-                '{{ $' . $key . ' }}',
+                '{{'.$key.'}}',
+                '{{ '.$key.' }}',
+                '{{$'.$key.'}}',
+                '{{ $'.$key.' }}',
             ];
 
             // Escape the value to prevent HTML injection in the email body
