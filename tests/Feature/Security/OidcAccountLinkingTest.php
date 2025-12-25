@@ -67,9 +67,10 @@ class OidcAccountLinkingTest extends TestCase
         $this->assertNull($user->oauth_id, 'User oauth_id should be null');
 
         // Assert response status (should be a redirect to login with error, or similar)
-        // Since we fall through to create user logic, and email exists, it might fail there.
-        // Ideally we should see an error message.
         $response->assertStatus(302);
+
+        // Assert we get the specific error message instead of a generic exception error
+        $response->assertSessionHas('error', 'Email account exists but OIDC email is not verified.');
     }
 
     public function test_callback_links_existing_user_if_email_verified()

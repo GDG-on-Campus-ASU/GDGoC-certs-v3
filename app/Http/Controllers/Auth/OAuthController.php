@@ -156,23 +156,27 @@ class OAuthController extends Controller
             if (!$user) {
                 // If not found by oauth_id, check by email if linking is enabled
                 if ($settings->link_existing_users && isset($userInfo['email'])) {
-                    // Check if email is verified by the OIDC provider
-                    $emailVerified = false;
-                    if (isset($userInfo['email_verified'])) {
-                        $emailVerified = filter_var($userInfo['email_verified'], FILTER_VALIDATE_BOOLEAN);
-                    }
+                    $existingUser = User::where('email', $userInfo['email'])->first();
 
-                    if ($emailVerified) {
-                        $user = User::where('email', $userInfo['email'])->first();
+                    if ($existingUser) {
+                        // Check if email is verified by the OIDC provider
+                        $emailVerified = false;
+                        if (isset($userInfo['email_verified'])) {
+                            $emailVerified = filter_var($userInfo['email_verified'], FILTER_VALIDATE_BOOLEAN);
+                        }
 
-                        if ($user) {
+                        if ($emailVerified) {
+                            $user = $existingUser;
                             // Link the existing user
                             $user->oauth_provider = 'oidc';
                             $user->oauth_id = $userInfo['sub'] ?? $userIdentifier;
                             $user->save();
+                        } else {
+                            // Email account exists but OIDC email is not verified.
+                            // We MUST NOT continue to create a user with this email as it would fail unique constraint.
+                            Log::warning('OIDC Account Linking skipped: Email not verified by provider.', ['email' => $userInfo['email']]);
+                            return redirect()->route('login')->with('error', 'Email account exists but OIDC email is not verified.');
                         }
-                    } else {
-                        Log::warning('OIDC Account Linking skipped: Email not verified by provider.', ['email' => $userInfo['email']]);
                     }
                 }
             }
