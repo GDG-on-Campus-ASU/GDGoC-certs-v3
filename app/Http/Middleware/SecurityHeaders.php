@@ -26,9 +26,6 @@ class SecurityHeaders
         // Control referrer information
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-        // CSP is omitted to prevent breaking external resources (CDNs, etc.)
-        // In a production environment, this should be configured with specific allowed domains.
-
         return $response;
     }
 }
