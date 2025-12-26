@@ -17,9 +17,16 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        // Prevent clickjacking: allow same origin (safer default than DENY)
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+
+        // Prevent MIME sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
+
+        // Control referrer information
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+        // Enforce HTTPS (HSTS)
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
         return $response;
