@@ -18,7 +18,7 @@ class EnsureOrgNameIsSet
         $user = $request->user();
 
         // Skip if user is not authenticated or already has org_name set
-        if (!$user || $user->org_name) {
+        if (! $user || $user->org_name) {
             return $next($request);
         }
 

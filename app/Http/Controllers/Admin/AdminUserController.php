@@ -16,7 +16,7 @@ class AdminUserController extends Controller
     public function index(Request $request)
     {
         $currentUser = $request->user();
-        
+
         // Superadmins can see all non-superadmin users
         // Admins can only see leaders
         if ($currentUser->role === 'superadmin') {
@@ -46,27 +46,27 @@ class AdminUserController extends Controller
     public function store(Request $request)
     {
         $currentUser = $request->user();
-        
+
         // Define validation rules
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
         ];
-        
+
         // Only superadmins can assign roles
         if ($currentUser->role === 'superadmin') {
             $rules['role'] = ['required', Rule::in(['leader', 'admin'])];
         }
-        
+
         $validated = $request->validate($rules);
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $currentUser->role === 'superadmin' && isset($validated['role']) 
-                ? $validated['role'] 
+            'role' => $currentUser->role === 'superadmin' && isset($validated['role'])
+                ? $validated['role']
                 : 'leader',
             'status' => 'active',
         ]);
@@ -81,12 +81,12 @@ class AdminUserController extends Controller
     public function edit(Request $request, User $user)
     {
         $currentUser = $request->user();
-        
+
         // Prevent editing superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot edit superadmin users.');
         }
-        
+
         // Admins cannot edit other admins
         if ($currentUser->role === 'admin' && $user->role === 'admin') {
             abort(403, 'Cannot edit other admin users.');
@@ -101,12 +101,12 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $currentUser = $request->user();
-        
+
         // Prevent editing superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot edit superadmin users.');
         }
-        
+
         // Admins cannot edit other admins
         if ($currentUser->role === 'admin' && $user->role === 'admin') {
             abort(403, 'Cannot edit other admin users.');
@@ -143,12 +143,12 @@ class AdminUserController extends Controller
     public function destroy(Request $request, User $user)
     {
         $currentUser = $request->user();
-        
+
         // Prevent deleting superadmins
         if ($user->role === 'superadmin') {
             abort(403, 'Cannot delete superadmin users.');
         }
-        
+
         // Admins cannot delete other admins
         if ($currentUser->role === 'admin' && $user->role === 'admin') {
             abort(403, 'Cannot delete other admin users.');

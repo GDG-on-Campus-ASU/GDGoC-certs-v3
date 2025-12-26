@@ -8,8 +8,8 @@ use App\Models\User;
 use App\Services\CertificateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class PublicCertificatePerformanceTest extends TestCase
 {
@@ -56,7 +56,7 @@ class PublicCertificatePerformanceTest extends TestCase
         $response1->assertHeader('Content-Type', 'application/pdf');
 
         // Verify that the file was saved to storage
-        $filename = 'certificates/' . $certificate->unique_id . '.pdf';
+        $filename = 'certificates/'.$certificate->unique_id.'.pdf';
         Storage::disk('local')->assertExists($filename);
 
         // Refresh certificate to verify DB update

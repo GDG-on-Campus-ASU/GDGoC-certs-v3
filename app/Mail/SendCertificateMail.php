@@ -14,7 +14,9 @@ class SendCertificateMail extends Mailable
     use Queueable, SerializesModels;
 
     public $mailSubject;
+
     public $body;
+
     public $pdfData;
 
     /**

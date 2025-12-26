@@ -30,7 +30,7 @@ return new class extends Migration
 
         // Add check constraints for role and status (database-agnostic)
         $driver = Schema::connection(null)->getConnection()->getDriverName();
-        
+
         if ($driver === 'sqlite') {
             // SQLite doesn't support ALTER TABLE ADD CONSTRAINT, but supports CHECK in CREATE TABLE
             // Recreate table with constraints

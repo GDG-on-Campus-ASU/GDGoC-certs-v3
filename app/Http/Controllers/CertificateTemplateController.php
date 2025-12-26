@@ -34,7 +34,7 @@ class CertificateTemplateController extends Controller
 
         foreach ($replacements as $key => $value) {
             // Replace {{ $key }} and {{ $key }} and {{$key}}
-            $content = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $content);
+            $content = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $content);
         }
 
         return response()->json([
@@ -50,8 +50,12 @@ class CertificateTemplateController extends Controller
     {
         Gate::authorize('viewAny', CertificateTemplate::class);
 
-        $userTemplates = auth()->user()->certificateTemplates;
-        $globalTemplates = CertificateTemplate::where('is_global', true)->get();
+        $userTemplates = auth()->user()->certificateTemplates()
+            ->select('id', 'user_id', 'name', 'type', 'created_at', 'original_template_id')
+            ->get();
+        $globalTemplates = CertificateTemplate::where('is_global', true)
+            ->select('id', 'name', 'type', 'created_at')
+            ->get();
 
         return view('dashboard.templates.certificates.index', compact('userTemplates', 'globalTemplates'));
     }

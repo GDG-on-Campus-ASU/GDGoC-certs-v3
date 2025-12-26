@@ -2,16 +2,15 @@
 
 namespace Tests\Feature\Security;
 
+use App\Jobs\ProcessCertificateRow;
+use App\Models\CertificateTemplate;
 use App\Models\EmailTemplate;
 use App\Models\User;
-use App\Models\CertificateTemplate;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Mail;
-use Tests\TestCase;
-use App\Jobs\ProcessCertificateRow;
 use App\Services\CertificateService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Mockery;
+use Tests\TestCase;
 
 class EmailTemplateRCETest extends TestCase
 {
@@ -29,7 +28,7 @@ class EmailTemplateRCETest extends TestCase
 
         // 2. Create an email template with malicious payload
         $proofPath = storage_path('app/rce_proof.txt');
-        $payload = '@php file_put_contents("' . addslashes($proofPath) . '", "RCE_SUCCESS"); @endphp';
+        $payload = '@php file_put_contents("'.addslashes($proofPath).'", "RCE_SUCCESS"); @endphp';
         // Add some normal content to verify substitution still works
         $payload .= ' Hello {{ Recipient_Name }}';
 
@@ -80,13 +79,15 @@ class EmailTemplateRCETest extends TestCase
         $this->assertFileDoesNotExist($proofPath);
 
         // 6. Verify correct substitution happened in the mail
-        Mail::assertSent(\App\Mail\SendCertificateMail::class, function ($mail) use ($payload) {
-             // The body should contain the substituted name, but the PHP tags should remain as plain text (or simply not executed)
-             return str_contains($mail->body, 'Hello Safe User')
-                 && str_contains($mail->body, '@php');
+        Mail::assertSent(\App\Mail\SendCertificateMail::class, function ($mail) {
+            // The body should contain the substituted name, but the PHP tags should remain as plain text (or simply not executed)
+            return str_contains($mail->body, 'Hello Safe User')
+                && str_contains($mail->body, '@php');
         });
 
         // Clean up (just in case)
-        if (file_exists($proofPath)) @unlink($proofPath);
+        if (file_exists($proofPath)) {
+            @unlink($proofPath);
+        }
     }
 }
