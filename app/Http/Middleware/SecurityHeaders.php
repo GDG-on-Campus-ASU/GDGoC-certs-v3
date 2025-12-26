@@ -29,7 +29,6 @@ class SecurityHeaders
         // Enforce HTTPS (HSTS)
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
-
         return $response;
     }
 }
