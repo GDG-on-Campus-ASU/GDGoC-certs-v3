@@ -29,6 +29,12 @@ class SecurityHeaders
         // Enforce HTTPS (HSTS)
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
+        // Permissions Policy: Disable sensitive features
+        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+
+        // Prevent Flash/Acrobat cross-domain policies
+        $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
+
         return $response;
     }
 }
