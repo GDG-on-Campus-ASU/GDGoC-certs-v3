@@ -17,17 +17,17 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        // Prevent clickjacking: deny all framing
-        $response->headers->set('X-Frame-Options', 'DENY');
+        // Prevent clickjacking: allow same origin (safer default than DENY)
+        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
 
         // Prevent MIME sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
         // Control referrer information
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-      
-        // Remove X-Powered-By if it exists (though usually handled by php.ini, it's good to be sure)
-        $response->headers->remove('X-Powered-By');
+
+        // Enforce HTTPS (HSTS)
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
 
         return $response;
