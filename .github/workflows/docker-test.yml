@@ -167,7 +167,7 @@ jobs:
           DB_NAME="${DB_DATABASE:-gdgoc_certs}"
           max_wait=300
           end=$((SECONDS + max_wait))
-          until timeout 10 docker compose exec -T postgres pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; do
+          until docker compose exec -T postgres pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; do
             if [ $SECONDS -gt $end ]; then
               echo "Postgres did not become ready in time"
               docker compose logs postgres --tail=200
@@ -199,6 +199,8 @@ jobs:
         run: |
           echo "Installing dev dependencies in php container..."
           docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
+        env:
+          COMPOSER_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Run database migrations (with retries)
         run: |
