@@ -19,6 +19,7 @@ use App\Http\Controllers\Leader\DashboardController as LeaderDashboardController
 use App\Http\Controllers\Leader\DocumentationController as LeaderDocumentationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCertificateController;
+use App\Http\Controllers\PublicTemplatePreviewController;
 use App\Http\Controllers\SmtpProviderController;
 use App\Http\Middleware\EnsureUserIsAdminOrSuperadmin;
 use App\Http\Middleware\EnsureUserIsSuperadmin;
@@ -32,6 +33,10 @@ Route::domain(config('domains.public', 'certs.gdg-oncampus.dev'))
         Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query.domain');
         Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show.domain');
         Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download.domain');
+
+        // Public Template Preview
+        Route::post('/preview/certificate', [PublicTemplatePreviewController::class, 'previewCertificate'])->name('public.preview.certificate.domain');
+        Route::post('/preview/email', [PublicTemplatePreviewController::class, 'previewEmail'])->name('public.preview.email.domain');
     });
 
 // Admin dashboard (sudo.certs-admin.certs.gdg-oncampus.dev)
@@ -95,7 +100,10 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                 // Superadmin-only routes
                 Route::middleware(EnsureUserIsSuperadmin::class)->group(function () {
                     // Template Management
+                    Route::post('/templates/certificates/preview', [AdminCertificateTemplateController::class, 'preview'])->name('templates.certificates.preview');
                     Route::resource('templates/certificates', AdminCertificateTemplateController::class)->names('templates.certificates');
+
+                    Route::post('/templates/email/preview', [AdminEmailTemplateController::class, 'preview'])->name('templates.email.preview');
                     Route::resource('templates/email', AdminEmailTemplateController::class)->names('templates.email');
 
                     // OIDC Settings
@@ -109,15 +117,6 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
                     // Documentation Management
                     Route::resource('documentation', AdminDocumentationController::class);
                 });
-            });
-
-        // Documentation viewing routes for superadmins (outside admin prefix)
-        Route::middleware(EnsureUserIsSuperadmin::class)
-            ->prefix('dashboard')
-            ->name('dashboard.')
-            ->group(function () {
-                Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
-                Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
             });
 
         // Profile routes (on admin domain)
@@ -223,18 +222,16 @@ Route::middleware(['auth', 'org_name', 'admin_or_superadmin'])->prefix('admin')-
     });
 });
 
-// Documentation viewing routes for superadmins (non-domain fallback)
-Route::middleware(['auth', 'superadmin'])->prefix('dashboard')->name('dashboard.')->group(function () {
-    Route::get('/documentation', [LeaderDocumentationController::class, 'index'])->name('documentation.index');
-    Route::get('/documentation/{documentation:slug}', [LeaderDocumentationController::class, 'show'])->name('documentation.show');
-});
-
 // Public Certificate Validation Routes - Non-domain fallback (accessible from any domain)
 Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('/', [PublicCertificateController::class, 'index'])->name('public.validate.index');
     Route::get('/validate', [PublicCertificateController::class, 'validate'])->name('public.validate.query');
     Route::get('/c/{unique_id}', [PublicCertificateController::class, 'show'])->name('public.certificate.show');
     Route::get('/c/{unique_id}/download', [PublicCertificateController::class, 'download'])->name('public.certificate.download');
+
+    // Public Template Preview
+    Route::post('/preview/certificate', [PublicTemplatePreviewController::class, 'previewCertificate'])->name('public.preview.certificate');
+    Route::post('/preview/email', [PublicTemplatePreviewController::class, 'previewEmail'])->name('public.preview.email');
 });
 
 // Public Certificate Validation Routes - Legacy domain-based routes

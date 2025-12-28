@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmailTemplate;
+use App\Services\TemplatePreviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -11,7 +12,7 @@ class EmailTemplateController extends Controller
     /**
      * Preview the email template.
      */
-    public function preview(Request $request)
+    public function preview(Request $request, TemplatePreviewService $previewService)
     {
         $validated = $request->validate([
             'subject' => ['required', 'string'],
@@ -37,6 +38,8 @@ class EmailTemplateController extends Controller
             $subject = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $subject);
             $body = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $body);
         }
+        $subject = $previewService->applyReplacements($validated['subject']);
+        $body = $previewService->applyReplacements($validated['body']);
 
         return response()->json([
             'subject' => $subject,
