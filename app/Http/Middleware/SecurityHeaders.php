@@ -29,6 +29,18 @@ class SecurityHeaders
         // Enforce HTTPS (HSTS)
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
+        // Content Security Policy
+        // Allows scripts and styles from self and necessary external sources (fonts.bunny.net)
+        // 'unsafe-inline' and 'unsafe-eval' are kept for Alpine.js compatibility for now
+        $csp = "default-src 'self'; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
+               "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
+               "font-src 'self' https://fonts.bunny.net; " .
+               "img-src 'self' data: https://www.gravatar.com; " .
+               "connect-src 'self';";
+
+        $response->headers->set('Content-Security-Policy', $csp);
+
         return $response;
     }
 }
