@@ -14,11 +14,11 @@ class BulkCertificateController extends Controller
      */
     public function create()
     {
-        $userCertTemplates = auth()->user()->certificateTemplates;
-        $globalCertTemplates = CertificateTemplate::where('is_global', true)->get();
+        $userCertTemplates = auth()->user()->certificateTemplates()->select('id', 'name')->get();
+        $globalCertTemplates = CertificateTemplate::where('is_global', true)->select('id', 'name')->get();
 
-        $userEmailTemplates = auth()->user()->emailTemplates;
-        $globalEmailTemplates = EmailTemplate::where('is_global', true)->get();
+        $userEmailTemplates = auth()->user()->emailTemplates()->select('id', 'name')->get();
+        $globalEmailTemplates = EmailTemplate::where('is_global', true)->select('id', 'name')->get();
 
         return view('dashboard.certificates.bulk', compact(
             'userCertTemplates',
