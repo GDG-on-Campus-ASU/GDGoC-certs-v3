@@ -74,13 +74,19 @@ class OAuthController extends Controller
 
         // Verify state parameter using hash_equals to prevent timing attacks
         $sessionState = $request->session()->get('oauth_state');
-        if (! $sessionState || ! hash_equals($sessionState, $request->state ?? '')) {
+        if (!$sessionState || !hash_equals($sessionState, $request->state ?? '')) {
+            Log::warning('OIDC Callback: Invalid state parameter', [
+                'session_state' => $sessionState,
+                'request_state' => $request->state
+            ]);
             return redirect()->route('login')->with('error', 'Invalid state parameter. Please try again.');
         }
 
         // Check for error in callback
         if ($request->has('error')) {
-            return redirect()->route('login')->with('error', 'OIDC Error: '.($request->error_description ?? $request->error));
+            $errorDescription = $request->error_description ?? $request->error;
+            Log::error('OIDC Callback: Provider returned error', ['error' => $errorDescription]);
+            return redirect()->route('login')->with('error', 'OIDC Error: ' . $errorDescription);
         }
 
         try {
@@ -103,30 +109,40 @@ class OAuthController extends Controller
             $accessToken = $tokens['access_token'] ?? null;
             $idToken = $tokens['id_token'] ?? null;
 
-            if (! $accessToken) {
+            if (!$accessToken) {
+                Log::error('OIDC Callback: No access token received');
                 return redirect()->route('login')->with('error', 'No access token received from OIDC provider.');
             }
 
             // 2. Validate ID Token (Basic Audience Check)
+            // Note: Full signature validation requires JWKS which is not currently in settings.
+            // We use safe decoding to inspect the audience.
             if ($idToken) {
-                $parts = explode('.', $idToken);
-                if (count($parts) === 3) {
-                    $payload = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', $parts[1]))), true);
-                    if ($payload) {
-                        $aud = $payload['aud'] ?? null;
-                        // aud can be a string or an array
-                        $isValidAud = false;
-                        if (is_string($aud) && $aud === $settings->client_id) {
-                            $isValidAud = true;
-                        } elseif (is_array($aud) && in_array($settings->client_id, $aud)) {
-                            $isValidAud = true;
-                        }
+                try {
+                    // Use simple URL-safe base64 decoding to inspect payload without verification
+                    // This is cleaner than manual explode/str_replace
+                    $parts = explode('.', $idToken);
+                    if (count($parts) === 3) {
+                        $payloadJson = static::base64UrlDecode($parts[1]);
+                        $payload = json_decode($payloadJson, true);
 
-                        if (! $isValidAud) {
-                            Log::warning('OIDC ID Token Audience Mismatch', ['aud' => $aud, 'expected' => $settings->client_id]);
-                            // We don't block here as we rely on UserInfo, but logging is good practice
+                        if ($payload) {
+                            $aud = $payload['aud'] ?? null;
+                            // aud can be a string or an array
+                            $isValidAud = false;
+                            if (is_string($aud) && $aud === $settings->client_id) {
+                                $isValidAud = true;
+                            } elseif (is_array($aud) && in_array($settings->client_id, $aud)) {
+                                $isValidAud = true;
+                            }
+
+                            if (!$isValidAud) {
+                                Log::warning('OIDC ID Token Audience Mismatch', ['aud' => $aud, 'expected' => $settings->client_id]);
+                            }
                         }
                     }
+                } catch (\Exception $e) {
+                     Log::warning('OIDC ID Token Parsing Failed', ['error' => $e->getMessage()]);
                 }
             }
 
@@ -153,7 +169,8 @@ class OAuthController extends Controller
             $identifierKey = $settings->identity_key ?? 'email';
             $userIdentifier = $userInfo[$identifierKey] ?? null;
 
-            if (! $userIdentifier) {
+            if (!$userIdentifier) {
+                Log::error('OIDC Callback: Missing user identifier', ['key' => $identifierKey, 'userInfo' => $userInfo]);
                 return redirect()->route('login')->with('error', "User identifier field '{$identifierKey}' is missing in the user info response.");
             }
 
@@ -185,6 +202,7 @@ class OAuthController extends Controller
                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
                     }
 
+                    // Create user
                     $user = User::create([
                         'name' => $userInfo['name'] ?? $userInfo['preferred_username'] ?? explode('@', $email)[0],
                         'email' => $email,
@@ -194,6 +212,7 @@ class OAuthController extends Controller
                         'status' => 'active', // Default status
                     ]);
                 } else {
+                    Log::info('OIDC Callback: User not found and creation disabled', ['identifier' => $userIdentifier]);
                     return redirect()->route('login')->with('error', 'User account not found and automatic creation is disabled.');
                 }
             }
@@ -208,6 +227,8 @@ class OAuthController extends Controller
             // Clean up session
             $request->session()->forget(['oauth_state', 'oauth_nonce']);
 
+            Log::info('OIDC Login Successful', ['user_id' => $user->id]);
+
             return redirect()->intended(route('dashboard'));
 
         } catch (\Exception $e) {
@@ -215,5 +236,21 @@ class OAuthController extends Controller
 
             return redirect()->route('login')->with('error', 'An error occurred during authentication.');
         }
+    }
+
+    /**
+     * Decode a Base64URL encoded string.
+     *
+     * @param string $input
+     * @return string
+     */
+    private static function base64UrlDecode($input)
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padLength = 4 - $remainder;
+            $input .= str_repeat('=', $padLength);
+        }
+        return base64_decode(str_tr($input, '-_', '+/'));
     }
 }

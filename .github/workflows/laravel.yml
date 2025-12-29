@@ -52,6 +52,8 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        env:
+          COMPOSER_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Generate key
         run: php artisan key:generate
