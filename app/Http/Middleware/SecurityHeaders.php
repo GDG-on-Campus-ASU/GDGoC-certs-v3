@@ -32,11 +32,11 @@ class SecurityHeaders
         // Content Security Policy
         // Allows scripts and styles from self and necessary external sources (fonts.bunny.net)
         // 'unsafe-inline' and 'unsafe-eval' are kept for Alpine.js compatibility for now
-        $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-               "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
-               "font-src 'self' https://fonts.bunny.net; " .
-               "img-src 'self' data: https://www.gravatar.com; " .
+        $csp = "default-src 'self'; ".
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; ".
+               "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; ".
+               "font-src 'self' https://fonts.bunny.net; ".
+               "img-src 'self' data: https://www.gravatar.com; ".
                "connect-src 'self';";
 
         $response->headers->set('Content-Security-Policy', $csp);

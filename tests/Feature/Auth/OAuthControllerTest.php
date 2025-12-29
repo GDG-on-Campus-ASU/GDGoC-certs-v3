@@ -60,6 +60,7 @@ class OAuthControllerTest extends TestCase
                 'name' => 'Test OIDC User',
                 'email' => 'oidc@example.com',
                 'preferred_username' => 'oidcuser',
+                'email_verified' => true,
             ], 200),
         ]);
 
@@ -100,6 +101,7 @@ class OAuthControllerTest extends TestCase
                 'sub' => 'oidc-user-456',
                 'name' => 'Existing User',
                 'email' => 'existing@example.com',
+                'email_verified' => true,
             ], 200),
         ]);
 
