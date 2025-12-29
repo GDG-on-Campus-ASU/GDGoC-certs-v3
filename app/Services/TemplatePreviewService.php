@@ -6,8 +6,6 @@ class TemplatePreviewService
 {
     /**
      * Generate replacements for template preview.
-     *
-     * @return array
      */
     public function getReplacements(): array
     {
@@ -25,16 +23,13 @@ class TemplatePreviewService
 
     /**
      * Apply replacements to the content.
-     *
-     * @param string $content
-     * @return string
      */
     public function applyReplacements(string $content): string
     {
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $content = str_replace(['{{ $' . $key . ' }}', '{{$' . $key . '}}', '{{ ' . $key . ' }}', '{{' . $key . '}}'], $value, $content);
+            $content = str_replace(['{{ $'.$key.' }}', '{{$'.$key.'}}', '{{ '.$key.' }}', '{{'.$key.'}}'], $value, $content);
         }
 
         return $content;
