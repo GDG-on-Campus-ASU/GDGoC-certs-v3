@@ -34,6 +34,7 @@ class CertificateTemplateController extends Controller
     public function index()
     {
         $templates = CertificateTemplate::with('user')
+            ->select('id', 'name', 'type', 'is_global', 'user_id', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
