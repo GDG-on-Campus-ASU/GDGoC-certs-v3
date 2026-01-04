@@ -17,7 +17,9 @@
         revokeRecipientName: '',
         revokeActionUrl: '',
         baseRevokeUrl: '{{ route('dashboard.certificates.revoke', ['certificate' => 'CERTIFICATE_ID_PLACEHOLDER']) }}',
-        openRevokeModal(id, name) {
+        triggerElement: null,
+        openRevokeModal(id, name, trigger) {
+            this.triggerElement = trigger;
             this.revokeCertificateId = id;
             this.revokeRecipientName = name;
             this.revokeActionUrl = this.baseRevokeUrl.replace('CERTIFICATE_ID_PLACEHOLDER', id);
@@ -31,6 +33,11 @@
         },
         closeRevokeModal() {
             this.revokeModalOpen = false;
+            // Restore focus
+            if (this.triggerElement) {
+                this.triggerElement.focus();
+                this.triggerElement = null;
+            }
             // Clear data after transition to avoid flicker
             setTimeout(() => {
                 this.revokeCertificateId = '';
@@ -105,8 +112,9 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             @if($certificate->status === 'issued')
                                                 <button type="button" 
-                                                    @click="openRevokeModal('{{ $certificate->id }}', '{{ addslashes($certificate->recipient_name) }}')"
+                                                    @click="openRevokeModal('{{ $certificate->id }}', '{{ addslashes($certificate->recipient_name) }}', $el)"
                                                     class="text-red-600 hover:text-red-900"
+                                                    aria-label="Revoke certificate for {{ $certificate->recipient_name }}"
                                                     data-name="{{ $certificate->recipient_name }}">
                                                     Revoke
                                                 </button>
