@@ -33,7 +33,9 @@ class EmailTemplateController extends Controller
      */
     public function index()
     {
+        // Select only necessary columns to avoid loading large 'body' text
         $templates = EmailTemplate::with('user')
+            ->select('id', 'user_id', 'name', 'subject', 'is_global', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
