@@ -14,7 +14,8 @@ class DocumentationController extends Controller
      */
     public function index()
     {
-        $pages = DocumentationPage::orderBy('order')->get();
+        // Select only necessary columns to avoid loading potentially large content
+        $pages = DocumentationPage::select('id', 'order', 'title', 'slug')->orderBy('order')->get();
 
         return view('admin.documentation.index', compact('pages'));
     }

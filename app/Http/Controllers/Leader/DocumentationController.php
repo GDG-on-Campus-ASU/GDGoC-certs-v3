@@ -12,7 +12,8 @@ class DocumentationController extends Controller
      */
     public function index()
     {
-        $pages = DocumentationPage::orderBy('order')->get();
+        // Select only necessary columns to avoid loading potentially large content
+        $pages = DocumentationPage::select('id', 'title', 'slug', 'order')->orderBy('order')->get();
 
         return view('leader.documentation.index', compact('pages'));
     }
@@ -22,7 +23,8 @@ class DocumentationController extends Controller
      */
     public function show(DocumentationPage $documentation)
     {
-        $pages = DocumentationPage::orderBy('order')->get();
+        // Select only necessary columns for the sidebar navigation
+        $pages = DocumentationPage::select('id', 'title', 'slug', 'order')->orderBy('order')->get();
         $page = $documentation;
 
         return view('leader.documentation.show', compact('pages', 'page'));
