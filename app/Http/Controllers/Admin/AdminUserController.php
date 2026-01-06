@@ -61,15 +61,15 @@ class AdminUserController extends Controller
 
         $validated = $request->validate($rules);
 
-        User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $currentUser->role === 'superadmin' && isset($validated['role'])
-                ? $validated['role']
-                : 'leader',
-            'status' => 'active',
-        ]);
+        $user = new User;
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->password = Hash::make($validated['password']);
+        $user->role = $currentUser->role === 'superadmin' && isset($validated['role'])
+            ? $validated['role']
+            : 'leader';
+        $user->status = 'active';
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');

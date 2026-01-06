@@ -15,3 +15,7 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+## 2025-01-01 - User Mass Assignment Protection
+**Vulnerability:** The `User` model included sensitive fields (`role`, `status`, `oauth_provider`, `oauth_id`) in the `$fillable` array.
+**Learning:** Relying on controller-level validation (or lack of "all()" usage) to prevent Mass Assignment is fragile. If a developer accidentally uses `User::create($request->all())` or similar in a new feature, users could elevate their privileges.
+**Prevention:** Remove sensitive fields from `$fillable`. Assign them manually in controllers or use `forceFill()`/`forceCreate()` where necessary (e.g., Admin user creation).
