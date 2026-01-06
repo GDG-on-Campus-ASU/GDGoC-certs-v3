@@ -185,14 +185,14 @@ class OAuthController extends Controller
                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
                     }
 
-                    $user = User::create([
-                        'name' => $userInfo['name'] ?? $userInfo['preferred_username'] ?? explode('@', $email)[0],
-                        'email' => $email,
-                        'password' => bcrypt(Str::random(32)), // Random password since they use SSO
-                        'oauth_provider' => 'oidc',
-                        'oauth_id' => $userInfo['sub'] ?? $userIdentifier,
-                        'status' => 'active', // Default status
-                    ]);
+                    $user = new User;
+                    $user->name = $userInfo['name'] ?? $userInfo['preferred_username'] ?? explode('@', $email)[0];
+                    $user->email = $email;
+                    $user->password = bcrypt(Str::random(32)); // Random password since they use SSO
+                    $user->oauth_provider = 'oidc';
+                    $user->oauth_id = $userInfo['sub'] ?? $userIdentifier;
+                    $user->status = 'active'; // Default status
+                    $user->save();
                 } else {
                     return redirect()->route('login')->with('error', 'User account not found and automatic creation is disabled.');
                 }
