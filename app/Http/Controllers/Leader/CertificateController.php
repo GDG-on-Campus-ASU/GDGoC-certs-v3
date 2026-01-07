@@ -15,7 +15,26 @@ class CertificateController extends Controller
     {
         $this->authorize('viewAny', Certificate::class);
 
-        $certificates = auth()->user()->certificates()->latest()->paginate(20);
+        // ⚡ Bolt: Optimized query to select only necessary columns for the list view.
+        // This avoids fetching large 'data' (JSON) and 'file_path' columns,
+        // reducing memory usage and network overhead when listing many certificates.
+        $certificates = auth()->user()->certificates()
+            ->select([
+                'id',
+                'recipient_name',
+                'recipient_email',
+                'event_title',
+                'event_type',
+                'state',
+                'status',
+                'issue_date',
+                'revoked_at',
+                'revocation_reason',
+                'unique_id', // Included for potential future links
+                'created_at', // Included for latest() sorting consistency
+            ])
+            ->latest()
+            ->paginate(20);
 
         return view('leader.certificates.index', compact('certificates'));
     }
