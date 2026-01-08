@@ -23,11 +23,11 @@ class User extends Authenticatable
         'email',
         'password',
         'org_name',
-        'role',
+        // 'role', // Removed for security (Mass Assignment protection)
         'status',
         'termination_reason',
-        'oauth_provider',
-        'oauth_id',
+        // 'oauth_provider', // Removed for security
+        // 'oauth_id', // Removed for security
     ];
 
     /**
