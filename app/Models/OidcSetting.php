@@ -27,6 +27,10 @@ class OidcSetting extends Model
         'redirect_on_expiry' => 'boolean',
     ];
 
+    protected $hidden = [
+        'client_secret',
+    ];
+
     /**
      * Get the client_secret attribute, decrypting it.
      */
