@@ -140,4 +140,15 @@ class OAuthControllerTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertGuest();
     }
+
+    public function test_redirect_is_rate_limited()
+    {
+        // Make 10 requests (allowed)
+        for ($i = 0; $i < 10; $i++) {
+            $this->get(route('oauth.redirect.fallback'))->assertStatus(302);
+        }
+
+        // 11th request should be blocked
+        $this->get(route('oauth.redirect.fallback'))->assertStatus(429);
+    }
 }

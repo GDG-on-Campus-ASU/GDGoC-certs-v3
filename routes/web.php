@@ -44,8 +44,8 @@ Route::domain(config('domains.admin', 'sudo.certs-admin.certs.gdg-oncampus.dev')
     ->middleware(['auth', 'org_name'])
     ->group(function () {
         // OAuth / OIDC Routes
-        Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect')->withoutMiddleware(['auth', 'org_name']);
-        Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback')->withoutMiddleware(['auth', 'org_name']);
+        Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect')->withoutMiddleware(['auth', 'org_name'])->middleware('throttle:10,1');
+        Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback')->withoutMiddleware(['auth', 'org_name'])->middleware('throttle:10,1');
 
         // Leader Routes - Dashboard
         Route::get('/dashboard', [LeaderDashboardController::class, 'index'])->name('dashboard');
@@ -153,8 +153,8 @@ Route::middleware('auth')->group(function () {
 });
 
 // OAuth / OIDC Routes (non-domain fallback)
-Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect.fallback');
-Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback.fallback');
+Route::get('/auth/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect.fallback')->middleware('throttle:10,1');
+Route::get('/auth/callback', [OAuthController::class, 'callback'])->name('oauth.callback.fallback')->middleware('throttle:10,1');
 
 // Leader Routes - Protected by auth middleware (non-domain fallback)
 Route::middleware(['auth', 'org_name'])->prefix('dashboard')->name('dashboard.')->group(function () {
