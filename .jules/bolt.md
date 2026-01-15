@@ -9,3 +9,7 @@
 **Learning:** Eloquent's `get()` selects all columns by default (`SELECT *`). When models contain large text or blob columns (like `body` or `content` in templates), fetching a list of these models can consume excessive memory and bandwidth, even if those specific columns are not used in the view.
 
 **Action:** When listing models that have potentially large columns not needed for the list view, always use `select('id', 'name', ...)` to fetch only the necessary columns.
+
+## 2025-01-27 - Aggregating Dashboard Stats
+**Learning:** Dashboard controllers often perform multiple `count()` queries on the same table with different `where` clauses. This results in N queries.
+**Action:** Use `selectRaw` with `count(case when condition then 1 end)` to aggregate these into a single query per table, reducing database round-trips.
