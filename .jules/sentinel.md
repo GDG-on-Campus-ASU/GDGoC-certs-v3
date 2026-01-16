@@ -15,3 +15,7 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+## 2025-01-28 - Mass Assignment Protection Gap
+**Vulnerability:** Sensitive fields (`role`, `status`, `termination_reason`, `oauth_provider`, `oauth_id`) were included in the `User` model's `$fillable` array, enabling potential Privilege Escalation via mass assignment.
+**Learning:** Relying solely on `FormRequest` validation is insufficient; "defense in depth" requires limiting `$fillable` on the Model level. Codebase memory/documentation may incorrectly state these fields are protected when they are not.
+**Prevention:** Strictly limit `$fillable` to user-editable fields (name, email). Use `forceCreate()` or `forceFill()` in trusted administrative controllers (like `AdminUserController` and `OAuthController`) to set sensitive attributes.

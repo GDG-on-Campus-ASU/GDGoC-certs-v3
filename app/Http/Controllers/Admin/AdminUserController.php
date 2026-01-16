@@ -61,7 +61,7 @@ class AdminUserController extends Controller
 
         $validated = $request->validate($rules);
 
-        User::create([
+        User::forceCreate([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),

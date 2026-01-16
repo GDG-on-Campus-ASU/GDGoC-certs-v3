@@ -185,7 +185,7 @@ class OAuthController extends Controller
                         return redirect()->route('login')->with('error', 'Email is required to create a new user account.');
                     }
 
-                    $user = User::create([
+                    $user = User::forceCreate([
                         'name' => $userInfo['name'] ?? $userInfo['preferred_username'] ?? explode('@', $email)[0],
                         'email' => $email,
                         'password' => bcrypt(Str::random(32)), // Random password since they use SSO
