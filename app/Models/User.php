@@ -23,11 +23,6 @@ class User extends Authenticatable
         'email',
         'password',
         'org_name',
-        'role',
-        'status',
-        'termination_reason',
-        'oauth_provider',
-        'oauth_id',
     ];
 
     /**
