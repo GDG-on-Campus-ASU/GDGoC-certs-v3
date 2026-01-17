@@ -9,3 +9,7 @@
 **Learning:** Eloquent's `get()` selects all columns by default (`SELECT *`). When models contain large text or blob columns (like `body` or `content` in templates), fetching a list of these models can consume excessive memory and bandwidth, even if those specific columns are not used in the view.
 
 **Action:** When listing models that have potentially large columns not needed for the list view, always use `select('id', 'name', ...)` to fetch only the necessary columns.
+
+## 2025-01-02 - Driver-Agnostic SQL Testing
+**Learning:** When asserting SQL queries in tests (e.g., via `DB::getQueryLog()`), avoid hardcoded quotes around identifiers (like `"column"` or `` `column` ``). Different database drivers (SQLite vs MySQL vs Postgres) use different quoting strategies.
+**Action:** Use `assertStringContainsString('column', $query)` to check for column presence instead of exact string matching with quotes.
