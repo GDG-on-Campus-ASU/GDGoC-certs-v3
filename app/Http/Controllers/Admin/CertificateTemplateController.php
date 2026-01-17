@@ -34,6 +34,8 @@ class CertificateTemplateController extends Controller
     public function index()
     {
         $templates = CertificateTemplate::with('user')
+            // Select specific columns to avoid loading large content fields
+            ->select('id', 'user_id', 'name', 'type', 'is_global', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
