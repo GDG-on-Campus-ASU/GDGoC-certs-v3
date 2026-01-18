@@ -83,6 +83,13 @@ class BulkCertificateController extends Controller
         $processedCount = 0;
         $errors = [];
 
+        // Optimization: Fetch common user data once outside the loop to avoid N+1 queries
+        $user = auth()->user();
+        $userName = $user->name;
+        $userOrgName = $user->org_name ?? '';
+        $userId = $user->id;
+        $smtpProviderId = $user->smtpProviders()->first()?->id;
+
         foreach ($csvData as $lineNumber => $row) {
             // Skip empty rows
             if (empty(array_filter($row))) {
@@ -122,15 +129,12 @@ class BulkCertificateController extends Controller
                     continue;
                 }
 
-                // Get user's first SMTP provider ID (if any)
-                $smtpProviderId = auth()->user()->smtpProviders()->first()?->id;
-
                 // Dispatch job
                 ProcessCertificateRow::dispatch(
-                    auth()->id(),
+                    $userId,
                     $rowData,
-                    auth()->user()->name,
-                    auth()->user()->org_name ?? '',
+                    $userName,
+                    $userOrgName,
                     $validated['certificate_template_id'],
                     $validated['email_template_id'],
                     $smtpProviderId
