@@ -15,3 +15,7 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+## 2024-05-24 - Unbounded Template Input DoS
+**Vulnerability:** Public template preview endpoints accepted unlimited string length for content/body, exposing the application to DoS attacks via memory exhaustion or CPU spikes during string replacement.
+**Learning:** Preview features that process user input (even if not persisting it) must enforce strict input limits. `string` validation in Laravel does not imply a length limit.
+**Prevention:** Always add `max:N` validation rules to string inputs, especially on public endpoints. For file content like SVG/HTML, 100KB is usually sufficient.
