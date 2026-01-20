@@ -21,7 +21,7 @@ class PublicTemplatePreviewController extends Controller
     public function previewCertificate(Request $request)
     {
         $validated = $request->validate([
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', 'max:100000'],
             'type' => ['required', Rule::in(['svg', 'blade'])],
         ]);
 
@@ -39,8 +39,8 @@ class PublicTemplatePreviewController extends Controller
     public function previewEmail(Request $request)
     {
         $validated = $request->validate([
-            'subject' => ['required', 'string'],
-            'body' => ['required', 'string'],
+            'subject' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string', 'max:100000'],
         ]);
 
         $subject = $this->previewService->applyReplacements($validated['subject']);
