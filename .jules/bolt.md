@@ -9,3 +9,7 @@
 **Learning:** Eloquent's `get()` selects all columns by default (`SELECT *`). When models contain large text or blob columns (like `body` or `content` in templates), fetching a list of these models can consume excessive memory and bandwidth, even if those specific columns are not used in the view.
 
 **Action:** When listing models that have potentially large columns not needed for the list view, always use `select('id', 'name', ...)` to fetch only the necessary columns.
+
+## 2025-12-27 - Certificate Model Heavy Payload
+**Learning:** The `Certificate` model contains a `data` JSON column which can be very large. Default `SELECT *` queries in list views (like `Leader\CertificateController::index`) hydrate this column unnecessarily, consuming memory.
+**Action:** Always use specific `select()` columns when listing `Certificate` models, ensuring to include `created_at` (for sorting) and foreign keys (like `certificate_template_id`) for relationships.

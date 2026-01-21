@@ -15,7 +15,25 @@ class CertificateController extends Controller
     {
         $this->authorize('viewAny', Certificate::class);
 
-        $certificates = auth()->user()->certificates()->latest()->paginate(20);
+        $certificates = auth()->user()->certificates()
+            ->select([
+                'id',
+                'user_id',
+                'certificate_template_id',
+                'recipient_name',
+                'recipient_email',
+                'event_title',
+                'event_type',
+                'state',
+                'status',
+                'issue_date',
+                'revoked_at',
+                'revocation_reason',
+                'created_at',
+                'updated_at',
+            ])
+            ->latest()
+            ->paginate(20);
 
         return view('leader.certificates.index', compact('certificates'));
     }
