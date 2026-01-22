@@ -9,3 +9,9 @@
 **Learning:** Eloquent's `get()` selects all columns by default (`SELECT *`). When models contain large text or blob columns (like `body` or `content` in templates), fetching a list of these models can consume excessive memory and bandwidth, even if those specific columns are not used in the view.
 
 **Action:** When listing models that have potentially large columns not needed for the list view, always use `select('id', 'name', ...)` to fetch only the necessary columns.
+
+## 2025-12-29 - SelectRaw Aliases and Model Casting
+
+**Learning:** When using `selectRaw` to calculate aggregates, avoid using aliases that match model attribute names if those attributes are cast. For example, if `LoginLog` has `casts = ['success' => 'boolean']`, a query like `selectRaw('count(...) as success')` will cause the result (e.g., integer `2`) to be cast to `true` (boolean) by Eloquent when accessing `$log->success`.
+
+**Action:** Always use distinct aliases (e.g., `success_count`) for aggregated columns to prevent unwanted model casting.
