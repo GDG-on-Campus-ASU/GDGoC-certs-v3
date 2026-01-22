@@ -15,3 +15,8 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+
+## 2024-05-24 - Public Template Preview DoS Protection
+**Vulnerability:** The public template preview endpoints (`/public/preview/certificate` and `/public/preview/email`) accepted unlimited input sizes for template content.
+**Learning:** Even "public" validation endpoints need strict input limits. Relying on PHP's memory limit is insufficient as concurrent requests can still exhaust resources (DoS).
+**Prevention:** Explicitly added `max:100000` (100KB) validation rules to all text inputs on public endpoints. Added a regression test `tests/Feature/Security/PublicTemplatePreviewDosTest.php`.
