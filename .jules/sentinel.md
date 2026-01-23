@@ -15,3 +15,8 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+
+## 2024-05-24 - OIDC Rate Limiting Gap
+**Vulnerability:** OIDC authentication routes (`/auth/redirect` and `/auth/callback`) were not rate-limited, allowing potential DoS or brute-force attempts on the OAuth state mechanism.
+**Learning:** Default middleware groups or `withoutMiddleware` exceptions can inadvertently remove security protections like throttling. Always explicitly verify or re-apply rate limiting on public-facing sensitive endpoints.
+**Prevention:** Explicitly added `throttle:10,1` middleware to OIDC routes in `routes/web.php` and added regression tests in `tests/Feature/Security/OidcRateLimitTest.php`.
