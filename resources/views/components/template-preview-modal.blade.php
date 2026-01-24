@@ -17,14 +17,12 @@
                                 <div class="mb-4">
                                     <span class="font-bold">Subject:</span> <span id="preview-subject" class="text-gray-900"></span>
                                 </div>
-                                <div class="border border-gray-300 rounded-md p-4 min-h-[200px] bg-gray-50">
-                                    <iframe id="preview-body-frame" class="w-full h-96 border-0"></iframe>
-                                </div>
-                            @else
-                                <div id="preview-container" class="border border-gray-300 rounded-md p-4 min-h-[400px] bg-gray-50 flex items-center justify-center overflow-auto">
-                                    <!-- Content will be injected here -->
-                                </div>
                             @endif
+
+                            <div class="border border-gray-300 rounded-md p-4 min-h-[200px] bg-gray-50">
+                                <!-- Secure Preview Iframe: sandboxed to prevent script execution -->
+                                <iframe id="preview-frame" class="w-full h-96 border-0" sandbox="allow-same-origin"></iframe>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -48,13 +46,14 @@
         // Certificate inputs
         const contentInput = document.getElementById('content');
         const typeInput = document.getElementById('type');
-        const previewContainer = document.getElementById('preview-container');
+
+        // Unified preview frame
+        const previewFrame = document.getElementById('preview-frame');
 
         // Email inputs
         const subjectInput = document.getElementById('subject');
         const bodyInput = document.getElementById('body');
         const previewSubject = document.getElementById('preview-subject');
-        const previewBodyFrame = document.getElementById('preview-body-frame');
 
         function toggleModal(show) {
             if (show) {
@@ -89,11 +88,11 @@
             }
 
             // Show loading state
-            if (isEmail) {
-                 // Maybe add loading spinner for iframe?
-            } else {
-                previewContainer.innerHTML = '<p class="text-gray-500">Loading preview...</p>';
-            }
+            // Write loading message to iframe
+            const doc = previewFrame.contentWindow.document;
+            doc.open();
+            doc.write('<html><body style="font-family: sans-serif; color: #666; text-align: center; padding-top: 20px;">Loading preview...</body></html>');
+            doc.close();
 
             fetch('{{ $route }}', {
                 method: 'POST',
@@ -115,13 +114,16 @@
             .then(data => {
                 if (isEmail) {
                     previewSubject.textContent = data.subject;
-                    const doc = previewBodyFrame.contentWindow.document;
+                    const doc = previewFrame.contentWindow.document;
                     doc.open();
                     doc.write(data.body);
                     doc.close();
                 } else {
-                     // For SVG/HTML
-                    previewContainer.innerHTML = data.content;
+                    // For SVG/HTML
+                    const doc = previewFrame.contentWindow.document;
+                    doc.open();
+                    doc.write(data.content);
+                    doc.close();
                 }
                 toggleModal(true);
             })
@@ -137,9 +139,12 @@
                 }
 
                 alert(errorMsg);
-                if (!isEmail) {
-                    previewContainer.innerHTML = '';
-                }
+
+                // Clear loading state on error
+                 const doc = previewFrame.contentWindow.document;
+                 doc.open();
+                 doc.write('');
+                 doc.close();
             });
         });
 
