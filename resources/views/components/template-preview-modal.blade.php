@@ -18,11 +18,11 @@
                                     <span class="font-bold">Subject:</span> <span id="preview-subject" class="text-gray-900"></span>
                                 </div>
                                 <div class="border border-gray-300 rounded-md p-4 min-h-[200px] bg-gray-50">
-                                    <iframe id="preview-body-frame" class="w-full h-96 border-0"></iframe>
+                                    <iframe id="preview-body-frame" class="w-full h-96 border-0" sandbox="allow-same-origin"></iframe>
                                 </div>
                             @else
-                                <div id="preview-container" class="border border-gray-300 rounded-md p-4 min-h-[400px] bg-gray-50 flex items-center justify-center overflow-auto">
-                                    <!-- Content will be injected here -->
+                                <div class="border border-gray-300 rounded-md p-4 min-h-[400px] bg-gray-50 overflow-hidden">
+                                    <iframe id="preview-container" class="w-full h-full min-h-[400px] border-0" sandbox="allow-same-origin"></iframe>
                                 </div>
                             @endif
                         </div>
@@ -92,7 +92,10 @@
             if (isEmail) {
                  // Maybe add loading spinner for iframe?
             } else {
-                previewContainer.innerHTML = '<p class="text-gray-500">Loading preview...</p>';
+                const doc = previewContainer.contentWindow.document;
+                doc.open();
+                doc.write('<div style="display:flex;justify-content:center;align-items:center;height:100%;"><p style="font-family:sans-serif; color: #6b7280;">Loading preview...</p></div>');
+                doc.close();
             }
 
             fetch('{{ $route }}', {
@@ -121,7 +124,10 @@
                     doc.close();
                 } else {
                      // For SVG/HTML
-                    previewContainer.innerHTML = data.content;
+                    const doc = previewContainer.contentWindow.document;
+                    doc.open();
+                    doc.write(data.content);
+                    doc.close();
                 }
                 toggleModal(true);
             })
@@ -138,7 +144,10 @@
 
                 alert(errorMsg);
                 if (!isEmail) {
-                    previewContainer.innerHTML = '';
+                    const doc = previewContainer.contentWindow.document;
+                    doc.open();
+                    doc.write('');
+                    doc.close();
                 }
             });
         });
