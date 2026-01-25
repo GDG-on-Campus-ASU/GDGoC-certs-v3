@@ -33,7 +33,23 @@ class PublicCertificateController extends Controller
      */
     public function show($unique_id)
     {
-        $certificate = Certificate::where('unique_id', $unique_id)->firstOrFail();
+        // Optimization: Select only necessary columns to avoid loading the large 'data' JSON payload
+        $certificate = Certificate::where('unique_id', $unique_id)
+            ->select([
+                'id',
+                'unique_id',
+                'recipient_name',
+                'event_title',
+                'event_type',
+                'state',
+                'org_name',
+                'issuer_name',
+                'issue_date',
+                'status',
+                'revoked_at',
+                'revocation_reason',
+            ])
+            ->firstOrFail();
 
         return view('validate.show', compact('certificate'));
     }
