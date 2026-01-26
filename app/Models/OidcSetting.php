@@ -21,6 +21,10 @@ class OidcSetting extends Model
         'redirect_on_expiry',
     ];
 
+    protected $hidden = [
+        'client_secret',
+    ];
+
     protected $casts = [
         'link_existing_users' => 'boolean',
         'create_new_users' => 'boolean',
