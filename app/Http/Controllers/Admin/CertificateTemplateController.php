@@ -33,7 +33,8 @@ class CertificateTemplateController extends Controller
      */
     public function index()
     {
-        $templates = CertificateTemplate::with('user')
+        $templates = CertificateTemplate::select('id', 'user_id', 'name', 'type', 'is_global', 'created_at')
+            ->with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 

@@ -33,7 +33,8 @@ class EmailTemplateController extends Controller
      */
     public function index()
     {
-        $templates = EmailTemplate::with('user')
+        $templates = EmailTemplate::select('id', 'user_id', 'name', 'subject', 'is_global', 'created_at')
+            ->with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
