@@ -15,3 +15,8 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+
+## 2025-11-04 - OIDC Client Secret Exposure via Serialization
+**Vulnerability:** The `OidcSetting` model stored the `client_secret` encrypted but exposed the decrypted value in `toArray()` and `toJson()` because it lacked `$hidden` protection.
+**Learning:** Encrypted accessors automatically decrypt values when accessing attributes. If these attributes are not explicitly hidden, any JSON serialization (e.g., API response, logging) will leak the plaintext secret.
+**Prevention:** Always add sensitive encrypted attributes to the `$hidden` array in Eloquent models. Added regression test `tests/Unit/Security/ModelSerializationSecurityTest.php`.
