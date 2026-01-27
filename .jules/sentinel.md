@@ -15,3 +15,7 @@
 **Vulnerability:** The OIDC authentication flow trusts the `email` claim from the provider without verifying `email_verified`. This allows an attacker to register `admin@target.com` on a permissive OIDC provider and takeover the admin account if linking is enabled.
 **Learning:** "Deprioritized" security fixes can leave critical holes. Always verify `email_verified` when linking accounts by email.
 **Prevention:** Explicitly check `$userInfo['email_verified']` before linking or creating users from OIDC.
+## 2024-05-24 - Queue Worker State Leak via Config::set
+**Vulnerability:** Modification of global configuration (e.g., `Config::set('mail.from.address', ...)`) within a queue job persists across subsequent jobs processed by the same worker process. Additionally, the Mail Manager caches mailer instances, so updating `mail.mailers.config` is insufficient without purging the cached instance.
+**Learning:** Laravel queue workers boot the application once and process jobs in a loop. Global state changes like `Config::set` are not automatically reset between jobs. This can lead to information leaks or spoofing (e.g., one tenant's SMTP "From" address being used by another tenant, or credentials being reused).
+**Prevention:** Avoid `Config::set` for per-job configuration where possible. Use instance-specific configuration (e.g., `$mailable->from()`). When modifying mailer config, always call `Mail::purge('mailer_name')` to ensure the new configuration is applied.

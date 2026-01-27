@@ -72,6 +72,8 @@ class ProcessCertificateRow implements ShouldQueue
 
         // Configure Mailer - check for user's SMTP setting
         $mailerName = 'smtp'; // default mailer
+        $fromAddress = config('mail.from.address');
+        $fromName = config('mail.from.name');
 
         if ($this->smtpProviderId) {
             $smtpSetting = \App\Models\SmtpProvider::find($this->smtpProviderId);
@@ -88,8 +90,13 @@ class ProcessCertificateRow implements ShouldQueue
                     'timeout' => null,
                 ]);
 
-                Config::set('mail.from.address', $smtpSetting->from_address);
-                Config::set('mail.from.name', $smtpSetting->from_name);
+                // Purge the custom_smtp mailer to ensure it uses the new configuration
+                // preventing credentials leakage from previous jobs
+                Mail::purge('custom_smtp');
+
+                // We do NOT set global config for 'from' address to avoid leaking it to other jobs
+                $fromAddress = $smtpSetting->from_address;
+                $fromName = $smtpSetting->from_name;
 
                 $mailerName = 'custom_smtp';
             }
@@ -131,9 +138,15 @@ class ProcessCertificateRow implements ShouldQueue
 
         // Send Email (only if recipient_email is provided)
         if ($certificate->recipient_email) {
+            $mailable = new SendCertificateMail($subject, $body, $pdfData);
+
+            if ($fromAddress) {
+                $mailable->from($fromAddress, $fromName);
+            }
+
             Mail::mailer($mailerName)
                 ->to($certificate->recipient_email)
-                ->send(new SendCertificateMail($subject, $body, $pdfData));
+                ->send($mailable);
         }
     }
 }
