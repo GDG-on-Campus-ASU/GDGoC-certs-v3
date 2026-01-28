@@ -9,3 +9,7 @@
 **Learning:** Eloquent's `get()` selects all columns by default (`SELECT *`). When models contain large text or blob columns (like `body` or `content` in templates), fetching a list of these models can consume excessive memory and bandwidth, even if those specific columns are not used in the view.
 
 **Action:** When listing models that have potentially large columns not needed for the list view, always use `select('id', 'name', ...)` to fetch only the necessary columns.
+
+## 2025-05-22 - Pagination Query Verification in Tests
+**Learning:** When using `DB::getQueryLog()` to verify query optimizations for paginated results, remember that Laravel's paginator executes a `count(*)` query first. This count query often selects `*` (as aggregate) or behaves differently.
+**Action:** In tests verifying `select` clauses on paginated queries, explicitly filter out queries containing `count(*)` to ensure assertions apply to the data retrieval query.
